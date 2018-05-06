@@ -44,7 +44,7 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<title>web-TLO-0.9.3.7</title>
+		<title>web-TLO-0.9.3.9</title>
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
