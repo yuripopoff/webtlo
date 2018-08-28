@@ -44,7 +44,7 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<title>web-TLO-0.9.3.9</title>
+		<title>web-TLO-0.9.3.10</title>
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
@@ -381,6 +381,7 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 								</div>
 								<div id="authentication" class="collapse show" role="tabpanel">
 									<div class="card-body">
+										<input id="check_mirrors_access" type="button" class="btn btn-sm btn-outline-dark" value="Проверить доступ" title="Проверить доступность форума и API" />
 										<div class="row">
 											<label for="forum_url" class="col-3 col-form-label">
 												Используемый адрес форума:
@@ -396,6 +397,7 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 													<option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
 													<option value="https://rutracker.nl" <?php echo ($cfg['forum_url'] == 'https://rutracker.nl' ? "selected" : "") ?> >https://rutracker.nl</option>
 												</select>
+												<i id="forum_url_result" class=""></i>
 											</div>
 										</div>
 										<div class="row">
@@ -411,6 +413,7 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 													<option value="https://api.t-ru.org" <?php echo ($cfg['api_url'] == 'https://api.t-ru.org' ? "selected" : "") ?> >https://api.t-ru.org</option>
 													<option value="https://api.rutracker.org" <?php echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?> >https://api.rutracker.org</option>
 												</select>
+												<i id="api_url_result" class=""></i>
 											</div>
 										</div>
 										<div class="row">

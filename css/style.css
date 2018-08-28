@@ -82,6 +82,10 @@ table a:visited {
 	display: none;
 }
 
+#check_mirrors_access {
+	margin-bottom: 5px;
+}
+
 /* statistics */
 #table_statistics {
 	font-size: small;
