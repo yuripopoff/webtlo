@@ -302,7 +302,10 @@ function natsort_field( array $input, $field, $direct = 1 ) {
 // установка параметров прокси
 class Proxy {
 	
-	public static $proxy = array();
+	public static $proxy = array(
+		'forum_url' => array(),
+		'api_url' => array()
+	);
 	
 	protected static $auth;
 	protected static $type;
@@ -314,11 +317,15 @@ class Proxy {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
 		self::$address = (in_array(null, explode(':', $address)) ? null : $address);
 		self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
-		self::$proxy = $activate ? self::set_proxy( $activate_forum, $activate_api ) : array();
-		Log::append ( $activate
-			? 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address . '" для форума('. $activate_forum .') и API(' . $activate_api . ').'
-			: 'Прокси-сервер не используется.'
-		);
+		if ( $activate ) {
+			self::$proxy = self::set_proxy( $activate_forum, $activate_api );
+			Log::append(
+				'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address .
+				'" для форума('. $activate_forum .') и API(' . $activate_api . ').'
+			);
+		} else {
+			Log::append( 'Прокси-сервер не используется.' );
+		}
 	}
 	
 	private static function set_proxy( $activate_forum, $activate_api ) {
