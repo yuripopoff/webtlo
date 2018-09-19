@@ -30,6 +30,8 @@ if(isset($cfg['subsections'])){
 $savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
 $retracker = ($cfg['retracker'] == 1 ? "checked" : "");
 $proxy_activate = ($cfg['proxy_activate'] == 1 ? "checked" : "");
+$proxy_activate_forum = ( $cfg['proxy_activate_forum'] == 1 ? "checked" : "" );
+$proxy_activate_api = ( $cfg['proxy_activate_api'] == 1 ? "checked" : "" );
 $avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
@@ -469,12 +471,24 @@ $rule_date_release_until->sub( new DateInterval('P' . $cfg['rule_date_release'] 
 								<div id="proxy" class="collapse" role="tabpanel">
 									<div class="card-body">
 										<div class="form-group">
-											<label class="form-check-label" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
+											<label class="form-check-label" title="Использовать прокси-сервер при обращении к форуму и/или API, например, для обхода блокировки.">
 												<input class="form-check-input" name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?>>
 												использовать прокси-сервер (например, для обхода блокировки)
 											</label>
 										</div>
 										<div id="proxy_prop">
+											<div class="form-group">
+												<label class="form-check-label" title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
+													<input class="form-check-input" name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
+													использовать прокси-сервер при обращении к форуму
+												</label>
+											</div>
+											<div class="form-group">
+												<label class="form-check-label" title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
+													<input class="form-check-input" name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
+													использовать прокси-сервер при обращении к API
+												</label>
+											</div>
 											<div class="row">
 												<label for="proxy_type" class="col-3 col-form-label">
 													Тип прокси-сервера:
