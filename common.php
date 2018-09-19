@@ -147,6 +147,8 @@ function get_settings( $filename = "" ) {
 	
 	// прокси
 	$config['proxy_activate'] = $ini->read('proxy','activate',0);
+	$config['proxy_activate_forum'] = $ini->read( 'proxy', 'activate_forum', 1 );
+	$config['proxy_activate_api'] = $ini->read( 'proxy', 'activate_api', 0) ;
 	$config['proxy_type'] = $ini->read( 'proxy', 'type', 'socks5h' );
 	$config['proxy_hostname'] = $ini->read( 'proxy', 'hostname', 'px1.blockme.site' );
 	$config['proxy_port'] = $ini->read( 'proxy', 'port', 33128 );
@@ -175,7 +177,10 @@ function get_settings( $filename = "" ) {
 	$config['tor_for_user'] = $ini->read( 'curators', 'tor_for_user', 0 );
 	
 	// установка настроек прокси
-	Proxy::options( $config['proxy_activate'], $config['proxy_type'], $config['proxy_address'], $config['proxy_auth'] );
+	Proxy::options(
+		$config['proxy_activate'], $config['proxy_activate_forum'], $config['proxy_activate_api'],
+		$config['proxy_type'], $config['proxy_address'], $config['proxy_auth']
+	);
 	
 	// версия конфига
 	$user_version = $ini->read( 'other', 'user_version', 0 );
@@ -306,22 +311,28 @@ class Proxy {
 	
 	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7 );
 	
-	public static function options ( $active = false, $type = "http", $address = "", $auth = "" ) {
+	public static function options ( $activate = false, $activate_forum = true, $activate_api = false, $type = "http", $address = "", $auth = "" ) {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
 		self::$address = (in_array(null, explode(':', $address)) ? null : $address);
 		self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
-		self::$proxy = $active ? self::set_proxy() : array();
-		Log::append ( $active
-			? 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address . '".'
+		self::$proxy = $activate ? self::set_proxy( $activate_forum, $activate_api ) : array();
+		Log::append ( $activate
+			? 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address . '" для форума('. $activate_forum .') и API(' . $activate_api . ').'
 			: 'Прокси-сервер не используется.'
 		);
 	}
 	
-	private static function set_proxy () {
-		return array(
+	private static function set_proxy( $activate_forum, $activate_api ) {
+		$param = array(
 			CURLOPT_PROXYTYPE => self::$type,
 			CURLOPT_PROXY => self::$address,
 			CURLOPT_PROXYUSERPWD => self::$auth
+		);
+		$param_forum = $activate_forum ? $param : array();
+		$param_api = $activate_api ? $param : array();
+		return array(
+			'forum_url' => $param_forum,
+			'api_url' => $param_api
 		);
 	}
 	

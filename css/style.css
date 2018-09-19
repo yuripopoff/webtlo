@@ -363,6 +363,14 @@ li.menu.ui-tabs-active {
 	margin-top: 15px;
 }
 
+#proxy_prop div:first-child {
+	margin-bottom: 15px;
+}
+
+#proxy_prop div:first-child label {
+	display: block;
+}
+
 #online-tc {
 	padding: 1px 5px;
 }

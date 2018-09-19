@@ -347,7 +347,7 @@ $( "#check_mirrors_access" ).on( "click", function() {
 		$.ajax({
 			type: "POST",
 			url: "php/actions/check_mirror_access.php",
-			data: { cfg:$data, url:url },
+			data: { cfg:$data, url:url, url_type:value },
 			success: function( response ) {
 				$( element ).siblings( "i" ).removeAttr( "class" );
 				var result = result_list[ response ];
