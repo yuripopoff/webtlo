@@ -360,15 +360,7 @@ li.menu.ui-tabs-active {
 }
 
 #proxy_prop {
-	margin-top: 15px;
-}
-
-#proxy_prop div:first-child {
-	margin-bottom: 15px;
-}
-
-#proxy_prop div:first-child label {
-	display: block;
+	margin-top: 10px;
 }
 
 #online-tc {

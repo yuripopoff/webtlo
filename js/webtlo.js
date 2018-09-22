@@ -293,12 +293,6 @@ $("#savedir, #dir_torrents").on("change", function() {
 	}
 });
 
-// прокси в настройках
-$("#proxy_activate").on("change", function() {
-	$(this).prop("checked") ? $("#proxy_prop").show() : $("#proxy_prop").hide();
-});
-$("#proxy_activate").change();
-
 // получение bt_key, api_key, user_id
 $("#tracker_username, #tracker_password").on("change", function() {
 	if( $("#tracker_username").val() && $("#tracker_password").val() ) {

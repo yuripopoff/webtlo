@@ -29,7 +29,6 @@ if(isset($cfg['subsections'])){
 // чекбоксы
 $savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
 $retracker = ($cfg['retracker'] == 1 ? "checked" : "");
-$proxy_activate = ($cfg['proxy_activate'] == 1 ? "checked" : "");
 $proxy_activate_forum = ( $cfg['proxy_activate_forum'] == 1 ? "checked" : "" );
 $proxy_activate_api = ( $cfg['proxy_activate_api'] == 1 ? "checked" : "" );
 $avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
@@ -360,22 +359,18 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<h2>Настройки прокси-сервера</h2>
 							<div>
 								<div>
-									<label title="Использовать прокси-сервер при обращении к форуму и/или API, например, для обхода блокировки.">
-										<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?> />
-										использовать прокси-сервер (например, для обхода блокировки)
-									</label>											
+									<label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
+										<input name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
+										использовать прокси-сервер при обращении к форуму
+									</label>
+								</div>
+								<div>
+									<label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
+										<input name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
+										использовать прокси-сервер при обращении к API
+									</label>
 								</div>
 								<div id="proxy_prop">
-									<div>
-										<label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
-											<input name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
-											использовать прокси-сервер при обращении к форуму
-										</label>
-										<label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-											<input name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
-											использовать прокси-сервер при обращении к API
-										</label>
-									</div>
 									<div>
 										<label>
 											Тип прокси-сервера:
