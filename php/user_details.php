@@ -1,6 +1,7 @@
 <?php
 
 include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/phpQuery.php';
 
 class UserDetails {
 	
@@ -86,7 +87,6 @@ class UserDetails {
 			array( 'mode' => 'viewprofile' ),
 			array( CURLOPT_COOKIE => self::$cookie )
 		);
-		include_once dirname( __FILE__ ) . '/phpQuery.php';
 		$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
 		$keys = $html->find('table.user_details > tr:eq(9) > td')->text();
 		unset($html);

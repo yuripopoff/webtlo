@@ -293,6 +293,7 @@ if ( $common_exclude ) {
 	// ищем сообщение со сводным
 	$post_id = $reports->search_post_id( 4275633, true );
 	$common_mode = empty( $post_id ) ? 'reply' : 'editpost';
+	Log::append( "Отправка сводного отчёта..." );
 	// отправляем сводный отчёт
 	$reports->send_message(
 		$common_mode,
