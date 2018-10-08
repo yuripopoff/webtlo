@@ -3,7 +3,7 @@
 include dirname(__FILE__) . '/../../common.php';
 include dirname(__FILE__) . '/../../api.php';
 include dirname(__FILE__) . '/../../clients.php';
-include dirname(__FILE__) . '/../../reports.php';
+include_once dirname(__FILE__) . '/../classes/reports.php';
 
 try {
 	

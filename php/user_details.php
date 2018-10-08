@@ -64,7 +64,7 @@ class UserDetails {
 		preg_match("|.*bb_session=[^-]*-([0-9]*)|", $data, $uid);
 		preg_match("|.*(bb_session=[^;]*);.*|", $data, $cookie);
 		if( empty( $uid[1] ) || empty( $cookie[1] ) ) {
-			preg_match('|<title>(.*)</title>|si', $data, $title);
+			preg_match('|<title> *(.*)</title>|si', $data, $title);
 			if(!empty($title)) {
 				if($title[1] == 'rutracker.org'){
 					preg_match('|<h4[^>]*?>(.*)</h4>|si', $data, $text);

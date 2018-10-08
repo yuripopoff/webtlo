@@ -352,6 +352,11 @@ class Proxy {
 	
 }
 
+// часовой пояс по умолчанию
+if ( ! ini_get( 'date.timezone' ) ) {
+	date_default_timezone_set( 'Europe/Moscow' );
+}
+
 // текущая дата
 class Date {
 
