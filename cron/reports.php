@@ -12,8 +12,10 @@ try {
 	Log::write( $filelog );
 
 } catch ( Exception $e ) {
+
 	Log::append( $e->getMessage() );
 	Log::write( $filelog );
+
 }
 
 ?>

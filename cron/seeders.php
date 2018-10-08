@@ -4,9 +4,6 @@ include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../api.php';
 include_once dirname(__FILE__) . '/../php/classes/reports.php';
 
-if(!ini_get('date.timezone'))
-	date_default_timezone_set('Europe/Moscow');
-
 try {
 	
 	Log::append( "Обновление информации о сидах для всех раздач трекера..." );

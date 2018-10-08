@@ -56,13 +56,15 @@ try {
 	}
 
 	$endtime = microtime( true );
-	Log::append ( "Обновление списка раздач других хранителей завершено (общее время выполнения: " . round( $endtime-$starttime, 1 ) . " с)." );
+	Log::append( "Обновление списка раздач других хранителей завершено (общее время выполнения: " . round( $endtime - $starttime, 1 ) . " с)." );
 	
-	Log::write ( $filelog );
+	Log::write( $filelog );
 	
-} catch (Exception $e) {
+} catch ( Exception $e ) {
+
 	Log::append ( $e->getMessage() );
-	Log::write ( $filelog );
+	Log::write( $filelog );
+
 }
 
 ?>

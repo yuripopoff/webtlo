@@ -4,9 +4,6 @@ include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../api.php';
 include dirname(__FILE__) . '/../clients.php';
 
-if(!ini_get('date.timezone'))
-	date_default_timezone_set('Europe/Moscow');
-
 try {
 	
 	Log::append( "Начат процесс регулировки раздач в торрент-клиентах..." );
