@@ -13,7 +13,7 @@ $cfg = get_settings();
 
 // проверка настроек
 if ( empty( $cfg['subsections'] ) ) {
-	throw new Exception( "Error: Нет хранимых подразделов" );
+	throw new Exception( "Error: Не выбраны хранимые подразделы" );
 }
 
 if ( empty( $cfg['tracker_login'] ) ) {

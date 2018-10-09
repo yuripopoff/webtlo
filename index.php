@@ -126,13 +126,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-times" aria-hidden="true"></i>
 								</button>
 							</div>
-							<button id="update" name="update" type="button" title="Обновить сведения о раздачах">
+							<button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
 								<i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
 							</button>
-							<button id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум">
+							<button id="get_reports" name="get_reports" type="button" title="Сформировать отчёты для вставки на форум">
 								<i class="fa fa-file-text-o" aria-hidden="true"></i> Создать отчёты
 							</button>
-							<button id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум">
+							<button id="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
 							<div id="indication">

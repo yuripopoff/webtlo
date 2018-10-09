@@ -74,9 +74,6 @@ function makeDelay(ms){
 	}
 }
 
-// инициализация диалога
-$('#dialog').dialog({ autoOpen: false, width: 500 });
-
 // сортировка в select
 function doSortSelect( select_id ) {
 	var sortedVals = $.makeArray($('#'+select_id+' option')).sort( function(a,b) {
