@@ -53,6 +53,7 @@ function addSubsection(event, ui) {
 	if(q != 1) {
 		$("#list-ss").append('<option value="'+vl+'" data="0|'+label+'||||0">'+lb+'</option>');
 		$("#subsections_stored").append('<option value="'+vl+'">'+lb+'</option>');
+		$( "#reports_list_stored" ).append( '<option value="'+vl+'">'+lb+'</option>' );
 		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
 		$("#ss-id").prop("disabled", true);
 	}
@@ -60,7 +61,9 @@ function addSubsection(event, ui) {
 	ui.item.value = '';
 	doSortSelect("list-ss");
 	doSortSelect("subsections_stored");
+	doSortSelect( "reports_list_stored" );
 	$("#subsections").selectmenu("refresh");
+	$( "#reports_list" ).selectmenu( "refresh" );
 }
 
 /* удалить подраздел */
@@ -70,6 +73,7 @@ $("#ss-del").on("click", function() {
 		i = $("#list-ss :selected").index();
 		$("#list-ss :selected").remove();
 		$("#subsections_stored [value="+forum_id+"]").remove();
+		$("#reports_list_stored [value="+forum_id+"]").remove();
 		q = $("select[id=list-ss] option").size();
 		if(q == 0) {
 			$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
@@ -79,6 +83,7 @@ $("#ss-del").on("click", function() {
 			$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
 		}
 		$("#subsections").selectmenu("refresh");
+		$( "#reports_list" ).selectmenu( "refresh" );
 		getFilteredTopics();
 	}
 });

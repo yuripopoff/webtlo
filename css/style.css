@@ -58,6 +58,13 @@ input[type="text"] {
 	padding: 0 3px;
 }
 
+button:disabled {
+	background: #fafafa;
+	cursor: default;
+	color: #d3d3d3;
+	border: 1px solid #d3d3d3;
+}
+
 sup, sub {
     vertical-align: baseline;
     position: relative;
@@ -173,13 +180,6 @@ li.menu.ui-tabs-active {
 /* topics control */
 #topics_control {
 	padding: 10px 10px 5px 10px;
-}
-
-#topics_control button:disabled {
-	background: #fafafa;
-	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
 }
 
 .download-replace {
@@ -363,10 +363,6 @@ li.menu.ui-tabs-active {
 	margin-top: 10px;
 }
 
-#online-tc {
-	padding: 1px 5px;
-}
-
 #online-tc img {
 	height: 17px;
 	margin: 0 5px;
@@ -446,32 +442,23 @@ li.menu.ui-tabs-active {
 	flex-direction: column;
 	box-sizing: border-box;
 	height: calc(100% - 2px);
-}
-
-#reporttabs {
-	margin: 0;
-	padding: 0;
 	font-size: small;
+}
+
+#report_content {
+	margin: 0;
+	padding: 5px 10px 0 10px;
+	/* padding: 0; */
+	flex: 1;
 	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
-	height: calc(100% - 34px);
 }
 
-#reporttabs div {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	box-sizing: border-box;
+#reports_list-button {
+	margin-bottom: 5px;
 }
 
-.report a {
-	text-decoration: underline;
-}
-
-.rp-header {
-	font-weight: bold;
+#reports_list-menu * {
+	font-size: small;
 }
 
 /* statistics */
@@ -488,13 +475,6 @@ li.menu.ui-tabs-active {
 	margin: 0 0 10px 15px;
 	padding: .3em .7em;
 	font-size: 85%;
-}
-
-#get_statistics:disabled {
-	background: #fafafa;
-	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
 }
 
 #data_statistics {

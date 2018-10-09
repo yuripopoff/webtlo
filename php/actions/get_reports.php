@@ -7,7 +7,7 @@ try {
 
 	// идентификатор подраздела
 	if ( isset( $_POST['forum_id'] ) ) {
-		$forum_id = $_POST['forum_id'];
+		$forum_id = (int) $_POST['forum_id'];
 	}
 	
 	if ( ! is_int( $forum_id ) || $forum_id < 0 ) {
@@ -45,8 +45,8 @@ try {
 
 		// вытаскиваем из базы хранимое
 		$stored = Db::query_database(
-			"SELECT ss,COUNT(),SUM(si) FROM Topics WHERE dl = 1",
-			array(), true, PDO::FETCH_GROUP|PDO::FETCH_NUM
+			"SELECT ss,COUNT(),SUM(si) FROM Topics WHERE dl = 1 GROUP BY ss",
+			array(), true, PDO::FETCH_NUM|PDO::FETCH_UNIQUE
 		);
 
 		if ( empty( $stored ) ) {
@@ -57,7 +57,7 @@ try {
 		foreach ( $stored as $forum_id => $values ) {
 			$title = $cfg['subsections'][ $forum_id ]['na'];
 			// ищем тему со списками
-			$topic_id = $report->search_topic_id( $title );
+			$topic_id = $reports->search_topic_id( $title );
 			$topic_id = empty( $topic_id ) ? 'nan' : $topic_id;
 			// инфа о подразделе в сводный
 			$common_forums[] = sprintf(
@@ -65,7 +65,7 @@ try {
 				$topic_id,
 				$title,
 				$values[0],
-				$values[1]
+				convert_bytes( $values[1] )
 			);
 			// находим общее хранимое
 			$sumdlqt += $values[0];
@@ -73,9 +73,9 @@ try {
 		}
 
 		// формируем сводный отчёт
-		$output = 'Актуально на: [b]' . date( 'd.m.Y', $update_time[0] ) . '[/b][br]<br />'.
+		$output = 'Актуально на: [b]' . date( 'd.m.Y', $update_time[0] ) . '[/b]<br />[br]<br />'.
 			'Общее количество хранимых раздач: [b]'.$sumdlqt.'[/b] шт.<br />'.
-			'Общий вес хранимых раздач: [b]'.preg_replace( '/ (?!.* )/', '[/b] ', convert_bytes( $sumdlsi ) ).'[hr]<br />'.
+			'Общий вес хранимых раздач: [b]'.preg_replace( '/ (?!.* )/', '[/b] ', convert_bytes( $sumdlsi ) ).'<br />[hr]<br />'.
 			implode( '<br />', $common_forums );
 
 	} else {
@@ -84,8 +84,8 @@ try {
 
 		// const & pattern
 		$message_length_max = 119000;
-		$pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s<br />';
-		$pattern_spoiler = '[spoiler="№№ %s — %s"][list=1][*=%s]%s[/list][/spoiler]';
+		$pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s';
+		$pattern_spoiler = '[spoiler="№№ %s — %s"][list=1]<br />[*=%s]%s<br />[/list]<br />[/spoiler]';
 		$pattern_header = 'Хранитель %s: [url=profile.php?mode=viewprofile&u=%s&name=1][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s<br />';
 		$spoiler_length = mb_strlen( $pattern_spoiler, 'UTF-8' );
 	
@@ -137,7 +137,7 @@ try {
 			$tmp['dlsi'] += $topic['si'];
 			$tmp['dlqt']++;
 			$current_length = $tmp['lgth'] + $lgth;
-			$available_length = $message_length_max - $spoiler_length - ( $tmp['dlqt'] - $tmp['start'] + 1 ) * 3;
+			$available_length = $message_length_max - $spoiler_length - ( $tmp['dlqt'] - $tmp['start'] + 1 ) * 4;
 			if ( $current_length > $available_length || $tmp['dlqt']  == $topics_count ) {
 				$tmp['str'] = implode( '<br />[*]', $tmp['str'] );
 				$tmp['msg'][] = sprintf(
@@ -160,14 +160,16 @@ try {
 		}
 
 		// дописываем в начало первого сообщения
-		$tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date( 'd.m.Y', $update_time[0] ) . '[/color][br]'.
+		$tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date( 'd.m.Y', $update_time[0] ) . '[/color]<br />'.
 			'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes( $tmp['dlsi'] ) .
-			$tmp['msg'][0];
+			'<br />'. $tmp['msg'][0];
 
 		// собираем сообщения
-		$tmp['msg'] = '<div class="report_message">' . implode( '', array_map( function( $a, $b ) {
-			return "<h3>Сообщение $a</h3><div title=\"Выполните двойной клик для выделения всего сообщения\">$b</div>";
-		}, $tmp['msg'] ) ) . '</div>';
+		array_walk( $tmp['msg'], function( &$a, $b ) {
+			$b++;
+			$a = "<h3>Сообщение $b</h3><div title=\"Выполните двойной клик для выделения всего сообщения\">$a</div>";
+		});
+		$tmp['msg'] = '<div class="report_message">' . implode( '', $tmp['msg'] ) . '</div>';
 
 		// ищем тему со списками
 		$topic_id = $reports->search_topic_id( $forum[ $forum_id ]['na'] );
@@ -186,8 +188,11 @@ try {
 		// разбираем инфу, полученную из списков
 		foreach ( $keepers as $index => $keeper ) {
 			// array( 'post_id' => 4444444, 'nickname' => 'user', 'topics' => array( 0,1,2 ) )
+			if ( $keeper['nickname'] == $cfg['tracker_login'] ) {
+				continue;
+			}
 			// считаем сообщения других хранителей в подразделе
-			if ( ! empty( $keeper['topics'] ) && $cfg['tracker_login'] == $author_nickname ) {
+			if ( ! empty( $keeper['topics'] ) ) {
 				$topics_ids = array_chunk( $keeper['topics'], 500 );
 				foreach ( $topics_ids as $topics_ids ) {
 					$in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
@@ -209,12 +214,12 @@ try {
 		unset( $keepers );
 
 		$tmp['header'] = '[url=viewforum.php?f='.$forum_id.'][u][color=#006699]'.preg_replace( '/.*» ?(.*)$/', '$1', $forum[ $forum_id ]['na'] ).'[/u][/color][/url] '.
-			'| [url=tracker.php?f='.$forum_id.'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]'.
-			'Актуально на: [color=darkblue]'. date( 'd.m.Y', $update_time[0] ) . '[/color][br]'.
-			'Всего раздач в подразделе: ' . $forum[ $forum_id ]['qt'] .' шт. / ' . convert_bytes( $forum[ $forum_id ]['si'] ) . '[br]'.
-			'Всего хранимых раздач в подразделе: %s шт. / %s[br]'.
-			'Количество хранителей: %s[hr]'.
-			'Хранитель 1: [url=profile.php?mode=viewprofile&u='.urlencode( $cfg['tracker_login'] ).'&name=1][u][color=#006699]'.$cfg['tracker_login'].'[/u][/color][/url] [color=gray]~>[/color] '. $tmp['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes( $tmp['dlsi'] ) .'[br]';
+			'| [url=tracker.php?f='.$forum_id.'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br />[br]<br />'.
+			'Актуально на: [color=darkblue]'. date( 'd.m.Y', $update_time[0] ) . '[/color]<br />'.
+			'Всего раздач в подразделе: ' . $forum[ $forum_id ]['qt'] .' шт. / ' . convert_bytes( $forum[ $forum_id ]['si'] ) . '<br />'.
+			'Всего хранимых раздач в подразделе: %s шт. / %s<br />'.
+			'Количество хранителей: %s<br />[hr]<br />'.
+			'Хранитель 1: [url=profile.php?mode=viewprofile&u='.urlencode( $cfg['tracker_login'] ).'&name=1][u][color=#006699]'.$cfg['tracker_login'].'[/u][/color][/url] [color=gray]~>[/color] '. $tmp['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes( $tmp['dlsi'] ) .'<br />';
 
 		// значения хранимого для шапки
 		$count_keepers = 1;
@@ -245,7 +250,7 @@ try {
 			$sumdlqt_keepers,
 			convert_bytes( $sumdlsi_keepers ),
 			$count_keepers
-		);
+		) . '<br />';
 
 		$output = $tmp['header'] . $tmp['msg'];
 
@@ -308,14 +313,14 @@ try {
 	$output = str_replace( '%%tabs%%', implode( '', $tabs ), $pattern );
 	$output = str_replace( '%%content%%', implode( '', $content ), $output );
 */
-	echo json_encode(array(
+	echo json_encode( array(
 		'report' => $output,
 		'log' => Log::get()
 	));
 	
 } catch ( Exception $e ) {
 	Log::append( $e->getMessage() );
-	echo json_encode(array(
+	echo json_encode( array(
 		'log' => Log::get(),
 		'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />"
 	));

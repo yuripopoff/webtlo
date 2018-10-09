@@ -23,26 +23,6 @@ function showResult( text ) {
 	$( "#topics_result" ).html( text );
 }
 
-/* проверка закрывающего слеша в конце */
-function CheckSlash(e){
-	var path = $(e).val();
-	last_s = path.slice(-1);
-	if(path.indexOf('/') + 1) {
-		if(last_s != '/') {
-			new_path = path + '/';
-		}
-		else
-			new_path = path;
-	}
-	else {
-		if(last_s != '\\') {
-			new_path = path + '\\';
-		}
-		else
-			new_path = path;
-	}
-	$(e).val(new_path);
-}
 var lock = 0;
 
 function block_actions(){
@@ -89,4 +69,61 @@ function doSortSelectByValue( select_id ) {
 		return $(a).val().toUpperCase() > $(b).val().toUpperCase() ? 1 : $(a).val().toUpperCase() < $(b).val().toUpperCase() ? -1 : 0 ;
 	});
 	$('#'+select_id).empty().html(sortedVals);
+}
+
+// получение отчётов
+function getReport( $event, ui ) {
+	var forum_id = ui.item.value;
+	if ( $.isEmptyObject( forum_id ) ) {
+		return false;
+	}
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_reports.php",
+		data: { forum_id:forum_id },
+		beforeSend: function() {
+			$( "#reports_list" ).selectmenu( "disable" );
+			$( "#report_content" ).html( "<i class=\"fa fa-spinner fa-pulse\"></i>" );
+		},
+		success: function( response ) {
+			var response = $.parseJSON( response );
+			$( "#log" ).append( response.log );
+			$( "#report_content" ).html( response.report );
+			//инициализация "аккордиона" сообщений
+			$( "#report_content .report_message" ).each( function() {
+				$( this ).accordion({
+					collapsible: true,
+					heightStyle: "content"
+				});
+			});
+			// выделение тела сообщения двойным кликом
+			$( "#report_content .ui-accordion-content" ).dblclick( function() {
+				var e = this;
+				if ( window.getSelection ) {
+					var s = window.getSelection();
+					if ( s.setBaseAndExtent ) {
+						s.setBaseAndExtent( e, 0, e, e.childNodes.length );
+					} else {
+						var r = document.createRange();
+						r.selectNodeContents( e );
+						s.removeAllRanges();
+						s.addRange( r );
+					}
+				} else if ( document.getSelection ) {
+					var s = document.getSelection();
+					var r = document.createRange();
+					r.selectNodeContents( e );
+					s.removeAllRanges();
+					s.addRange( r );
+				} else if ( document.selection ) {
+					var r = document.body.createTextRange();
+					r.moveToElementText( e );
+					r.select();
+				}
+			});
+		},
+		complete: function() {
+			$( "#reports_list" ).selectmenu( "enable" );
+		},
+	});
 }

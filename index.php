@@ -129,9 +129,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
 								<i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
 							</button>
-							<button id="get_reports" name="get_reports" type="button" title="Сформировать отчёты для вставки на форум">
-								<i class="fa fa-file-text-o" aria-hidden="true"></i> Создать отчёты
-							</button>
 							<button id="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
@@ -294,13 +291,17 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				</div>
 				<div id="settings" class="content">
 					<div>
-						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл">
+						<button type="button" id="savecfg" title="Записать настройки в файл">
+							Сохранить настройки
+						</button>
 					</div>
 					<form id="config">
 						<div class="sub_settings">
 							<h2>Настройки авторизации на форуме</h2>
 							<div>
-								<input id="check_mirrors_access" type="button" value="Проверить доступ" title="Проверить доступность форума и API" />
+								<button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
+									Проверить доступ
+								</button>
 								<div>
 									<label>
 										Используемый адрес форума:
@@ -408,9 +409,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<h2>Настройки торрент-клиентов</h2>
 							<div>
 								<p>
-									<input name="add-tc" id="add-tc" type="button" value="Добавить" title="Добавить новый торрент-клиент в список" />
-									<input name="del-tc" id="del-tc" type="button" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
-									<button name="online-tc" id="online-tc" type="button" title="Проверить доступность выбранного торрент-клиента в списке">
+									<button type="button" id="add-tc" title="Добавить новый торрент-клиент в список">
+										Добавить
+									</button>
+									<button type="button" id="del-tc" title="Удалить выбранный торрент-клиент из списка">
+										Удалить
+									</button>
+									<button type="button" id="online-tc" title="Проверить доступность выбранного торрент-клиента в списке">
 										<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
 									</button>
 									<span id="result-tc"></span>
@@ -578,7 +583,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</div>
 					</form>
 				</div>					
-				<div id="reports" class="content"></div>
+				<div id="reports" class="content">
+					<select id="reports_list">
+						<optgroup id="reports_list_stored">
+							<option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
+							<?php echo $subsections ?>
+						</optgroup>
+						<optgroup>
+							<option value="0">Сводный отчёт</option>
+						</optgroup>
+					</select>
+					<hr />
+					<div id="report_content"></div>
+				</div>
 				<div id="statistics" class="content">
 					<div>
 						<button type="button" id="get_statistics" title="Получить статистику по хранимым подразделам">
@@ -646,7 +663,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<script type="text/javascript" src="js/common.js"></script>
 		<script type="text/javascript" src="js/tor_clients.js"></script>
 		<script type="text/javascript" src="js/subsections.js"></script>
-		<script type="text/javascript" src="js/webtlo.js"></script>
+		<script type="text/javascript" src="js/actions.js"></script>
+		<script type="text/javascript" src="js/widgets.js"></script>
 		<script type="text/javascript" src="js/topics.js"></script>		
 	</body>
 </html>
