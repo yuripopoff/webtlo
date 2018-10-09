@@ -4,20 +4,20 @@ $( document ).ready( function() {
     $.datepicker.regional["ru"];
 
     // инициализация главного меню
-	$( "#menutabs" ).tabs({
-		activate: function ( event, ui ) {
-			Cookies.set(
+    $( "#menutabs" ).tabs({
+        activate: function( event, ui ) {
+            Cookies.set(
                 'selected-tab',
                 ui.newTab.index()
             );
-		},
-		active: Cookies.get( 'selected-tab' ),
-	}).addClass(
+        },
+        active: Cookies.get( 'selected-tab' ),
+    }).addClass(
         "ui-tabs-vertical ui-helper-clearfix"
     ).removeClass(
         "ui-widget-content"
     );
-	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
+    $( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
 
     // период хранения средних сидов
 	$( "#avg_seeders_period, #filter_avg_seeders_period" ).spinner({
