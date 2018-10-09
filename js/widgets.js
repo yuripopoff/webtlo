@@ -8,13 +8,10 @@ $( document ).ready( function() {
 		activate: function ( event, ui ) {
 			Cookies.set(
                 'selected-tab',
-                ui.newTab.index() === 2
-                    ? 0
-                    : ui.newTab.index()
+                ui.newTab.index()
             );
 		},
 		active: Cookies.get( 'selected-tab' ),
-		disabled: [  ]
 	}).addClass(
         "ui-tabs-vertical ui-helper-clearfix"
     ).removeClass(
