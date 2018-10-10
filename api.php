@@ -131,6 +131,16 @@ class Api {
 		Db::query_database('DELETE FROM Forums WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
 	}
 	
+	// получить списко раздач подраздела
+	public function get_forum_topics_data( $forum_id ) {
+		if ( empty( $forum_id ) ) {
+			return false;
+		}
+		$url = $this->api_url . "/v1/static/pvc/f/$forum_id?api_key=" . $this->api_key;
+		$data = $this->request_exec( $url );
+		return $data;
+	}
+
 	// список раздач раздела
 	public function get_subsection_data( $forum_ids, $get = 'ids' ) {
 		//~ Log::append ( 'Получение списка раздач...' );
