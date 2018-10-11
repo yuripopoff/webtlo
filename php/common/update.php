@@ -99,6 +99,34 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
         if ( count( $topic_data ) < 4 ) {
             throw new Exception( "Error: Недостаточно элементов в ответе" );
         }
+
+        if ( isset( $topics_data_previous[ $topic_id ] ) ) {
+            $previous_data = $topics_data_previous[ $topic_id ];
+        }
+
+        if ( empty( $previous_data ) || $previous_data['rg'] != $topic_data[2] ) {
+            // получать для раздач info_hash и topic_title
+        }
+
+        if ( empty( $previous_data ) ) {
+            if ( $previous_data['rg'] == $topic_data[2] ) {
+                // переносим старые значения
+                $days = $previous_data['ds'];
+                // по прошествии дня
+                if ( ! empty( $last ) && $current->diff( $last )->format('%d' ) > 0 ) {
+                    $days++;
+                } else {
+                    $sum_updates += $previous_data['qt'];
+                    $sum_seeders += $previous_data['se'];
+                }
+            } else {
+                // получать для раздач info_hash и topic_title
+            }
+        } elseif ( $previous_data['rg'] != $topic_data[2] ) {
+            // удалять перерегистрированные раздачи
+            // $topics_delele[] = $topic_id;
+        }
+
         $tmp['topics'][ $topic_id ]['id'] = $topic_id;
         $tmp['topics'][ $topic_id ]['ss'] = $forum_id;
         $tmp['topics'][ $topic_id ]['na'] = $topic_data['topic_title'];

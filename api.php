@@ -131,7 +131,7 @@ class Api {
 		Db::query_database('DELETE FROM Forums WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
 	}
 	
-	// получить списко раздач подраздела
+	// получить список раздач подраздела
 	public function get_forum_topics_data( $forum_id ) {
 		if ( empty( $forum_id ) ) {
 			return false;
