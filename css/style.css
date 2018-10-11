@@ -58,13 +58,6 @@ input[type="text"] {
 	padding: 0 3px;
 }
 
-button:disabled {
-	background: #fafafa;
-	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
-}
-
 sup, sub {
     vertical-align: baseline;
     position: relative;
@@ -114,6 +107,13 @@ li.menu.ui-tabs-active {
 
 .ui-button {
 	padding: .4em .6em;
+}
+
+.ui-button:disabled {
+	background: #fafafa;
+	cursor: default;
+	color: #d3d3d3;
+	border: 1px solid #d3d3d3;
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {

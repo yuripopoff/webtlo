@@ -46,15 +46,15 @@ if ( ! empty( $cfg['clients'] ) ) {
 Db::query_database( "CREATE TEMP TABLE Topics1 AS SELECT * FROM Topics WHERE 0 = 1" );
 
 // получаем дату предыдущего обновления
-$last_update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
+$update_topics = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
 $previous_update_time = new DateTime();
-$previous_update_time->setTimestamp( $last_update_time[0] )->setTime( 0, 0, 0 );
+$previous_update_time->setTimestamp( $update_topics[0] )->setTime( 0, 0, 0 );
 
 // подключаемся к api
 $api = new Api ( $cfg['api_url'], $cfg['api_key'] );
 
 // обновление дерева подразделов
-$api->get_cat_forum_tree();
+// $api->get_cat_forum_tree();
 
 foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
@@ -74,19 +74,10 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
         $current_update_time->setTimestamp( $topics_data['update_time'] );
     }
 
-    // получаем данные о раздачах за предыдущее обновление
-    if ( $cfg['avg_seeders'] ) {
-        $topics_data_previous = array();
-        $topics_ids = array_keys( $topics_data['result'] );
-        $topics_ids = array_chunk( $topics_ids, 500 );
-        foreach ( $topics_ids as $topics_ids ) {
-            $in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
-            $topics_data_previous += Db::query_database(
-                "SELECT id,se,rg,qt,ds,hs,na FROM Topics WHERE id IN ($in)",
-                $topics_ids, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
-            );
-        }
-        unset( $topics_ids );
+    // если дата текущего обновления совпадает с предыдущим
+    if ( $update_topics[0] == $topics_data['update_time'] ) {
+        Log::append( "Warning: Обновление не требуется" );
+        continue;
     }
 
     // "topic_id": [
@@ -96,93 +87,103 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
     //     "tor_size_bytes" 3
     // ]
 
-    // разбираем раздачи
-    foreach ( $topics_data['result'] as $topic_id => $topic_data ) {
+    // разбиваем result по 500 раздач
+    $topics_result = array_chunk( $topics_data['result'], 500, true );
 
-        if ( empty( $topic_data ) ) {
-            continue;
-        }
+    foreach ( $topics_result as $topics_result ) {
 
-        if ( count( $topic_data ) < 4 ) {
-            throw new Exception( "Error: Недостаточно элементов в ответе" );
-        }
-
-        // запоминаем имеющиеся данные о раздаче в локальной базе
-        if ( isset( $topics_data_previous[ $topic_id ] ) ) {
-            $previous_data = $topics_data_previous[ $topic_id ];
-        }
-
-        // получить для раздачи info_hash и topic_title
-        // если новая раздача или перерегистрированная
-        if ( empty( $previous_data ) || $previous_data['rg'] != $topic_data[2] ) {
-            $topics_data_add[] = $topic_id;
-        }
-
-        $days = 0;
-        $sum_updates = 1;
-        $sum_seeders = $topic_data[1];
-
-        // алгоритм нахождения среднего значения сидов
+        // получаем данные о раздачах за предыдущее обновление
         if ( $cfg['avg_seeders'] ) {
-            // ??? empty()
-            if ( empty( $previous_data['rg'] ) || $previous_data['rg'] == $topic_data[2] ) {
-                // переносим старые значения
-                $days_update = $previous_data['ds'];
-                // разница в днях между обновлениями сведений
-                if ( ! empty( $previous_update_time ) )  {
-                    $days_diff = $current_update_time->diff( $previous_update_time )->format( '%d' );
-                }
-                // по прошествии дня
-                if ( ! empty( $days_diff ) && $days_diff > 0 ) {
-                    $days_update++;
-                } else {
-                    $sum_updates += $previous_data['qt'];
-                    $sum_seeders += $previous_data['se'];
-                }
-            } else {
-                // удалять перерегистрированные раздачи
-                // чтобы очистить значения сидов для старой раздачи
-                $topics_delete[] = $topic_id;
-            }
+            $topics_ids = array_keys( $topics_result );
+            $in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
+            $topics_data_previous = Db::query_database(
+                "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($in)",
+                $topics_ids, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
+            );
+            unset( $topics_ids );
         }
 
+        // разбираем раздачи
+        foreach ( $topics_result as $topic_id => $topic_data ) {
 
-        $tmp[ $topic_id ]['id'] = $topic_id;
-        $tmp[ $topic_id ]['ss'] = $forum_id;
-        $tmp[ $topic_id ]['na'] = empty( $previous_data['na'] )
-            ? ''
-            : $previous_data['na'];
-        $tmp[ $topic_id ]['hs'] = empty( $previous_data['na'] )
-            ? ''
-            : $previous_data['hs'];
-        $tmp[ $topic_id ]['se'] = $sum_seeders;
-        $tmp[ $topic_id ]['si'] = $topic_data[3];
-        $tmp[ $topic_id ]['st'] = $topic_data[0];
-        $tmp[ $topic_id ]['rg'] = $topic_data[2];
-        // "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю), "-2" - из других подразделов
-        $tmp[ $topic_id ]['dl'] = isset( $tc_topics[ $topic_data['info_hash'] ] )
-            ? $stored
-                ? empty( $tc_topics[ $topic_data['info_hash'] ]['status'] )
-                    ? -1
-                    : 1
-                : -2
-            : 0;
-        $tmp[ $topic_id ]['qt'] = $sum_updates;
-        $tmp[ $topic_id ]['ds'] = $days_update;
-        $tmp[ $topic_id ]['cl'] = isset( $tc_topics[ $topic_data['info_hash'] ] )
-            ? $tc_topics[ $topic_data['info_hash'] ]['client']
-            : '';
+            if ( empty( $topic_data ) ) {
+                continue;
+            }
 
-        unset( $previous_data );
-    }
+            if ( count( $topic_data ) < 4 ) {
+                throw new Exception( "Error: Недостаточно элементов в ответе" );
+            }
 
-    unset( $topics_data_previous );
-    unset( $topics_data );
+            // запоминаем имеющиеся данные о раздаче в локальной базе
+            if ( isset( $topics_data_previous[ $topic_id ] ) ) {
+                $previous_data = $topics_data_previous[ $topic_id ];
+            }
 
-    if ( ! empty( $topics_data_add ) ) {
-        //
-        $topics_data_add = array_chunk( $topics_data_add, 500 );
-        foreach ( $topics_data_add as $topics_data_add ) {
+            // получить для раздачи info_hash и topic_title
+            // если новая раздача или перерегистрированная
+            if ( empty( $previous_data ) || $previous_data['rg'] != $topic_data[2] ) {
+                $topics_data_add[] = $topic_id;
+            }
+
+            $days_update = 0;
+            $sum_updates = 1;
+            $sum_seeders = $topic_data[1];
+
+            // алгоритм нахождения среднего значения сидов
+            if ( $cfg['avg_seeders'] && isset( $previous_data ) ) {
+                // ??? empty()
+                if ( empty( $previous_data['rg'] ) || $previous_data['rg'] == $topic_data[2] ) {
+                    // переносим старые значения
+                    $days_update = $previous_data['ds'];
+                    // разница в днях между обновлениями сведений
+                    if ( ! empty( $previous_update_time ) )  {
+                        $days_diff = $current_update_time->diff( $previous_update_time )->format( '%d' );
+                    }
+                    // по прошествии дня
+                    if ( ! empty( $days_diff ) && $days_diff > 0 ) {
+                        $days_update++;
+                    } else {
+                        $sum_updates += $previous_data['qt'];
+                        $sum_seeders += $previous_data['se'];
+                    }
+                } else {
+                    // удалять перерегистрированные раздачи
+                    // чтобы очистить значения сидов для старой раздачи
+                    $topics_delete[] = $topic_id;
+                }
+            }
+
+
+            $tmp[ $topic_id ]['id'] = $topic_id;
+            $tmp[ $topic_id ]['ss'] = $forum_id;
+            $tmp[ $topic_id ]['na'] = empty( $previous_data['na'] ) ? '' : $previous_data['na'];
+            $tmp[ $topic_id ]['hs'] = empty( $previous_data['na'] ) ? '' : $previous_data['hs'];
+            $tmp[ $topic_id ]['se'] = $sum_seeders;
+            $tmp[ $topic_id ]['si'] = $topic_data[3];
+            $tmp[ $topic_id ]['st'] = $topic_data[0];
+            $tmp[ $topic_id ]['rg'] = $topic_data[2];
+            // "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю), "-2" - из других подразделов
+            // $tmp[ $topic_id ]['dl'] = isset( $tc_topics[ $topic_data['info_hash'] ] )
+            //     ? $stored
+            //         ? empty( $tc_topics[ $topic_data['info_hash'] ]['status'] )
+            //             ? -1
+            //             : 1
+            //         : -2
+            //     : 0;
+            $tmp[ $topic_id ]['qt'] = $sum_updates;
+            $tmp[ $topic_id ]['ds'] = $days_update;
+            // $tmp[ $topic_id ]['cl'] = isset( $tc_topics[ $topic_data['info_hash'] ] )
+            //     ? $tc_topics[ $topic_data['info_hash'] ]['client']
+            //     : '';
+            unset( $previous_data );
+echo "each topic: " . memory_get_usage() . "\n";
+        }
+        unset( $topics_data_previous );
+
+echo "after topic_result: " . memory_get_usage() . "\n";
+
+        if ( ! empty( $topics_data_add ) ) {
+            //
             $in = str_repeat( '?,', count( $topics_data_add ) - 1 ) . '?';
             $topics_data = $api->get_tor_topic_data( $topics_data_add );
             if ( empty( $topics_data ) ) {
@@ -198,17 +199,25 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
                 }
             }
         }
-    }
+        unset( $topics_data_add );
 
-    // пишем данные о топиках в базу
-    if ( isset( $tmp['topics'] ) ) {
-        $select = Db::combine_set( $tmp );
-        unset( $tmp['topics'] );
-        Db::query_database( "INSERT INTO temp.Topics1 $select" );
-        unset( $select );
-    }
+        // пишем данные о топиках в базу
+        // if ( isset( $tmp ) ) {
+        //     $select = Db::combine_set( $tmp );
+        //     unset( $tmp );
+        //     Db::query_database( "INSERT INTO temp.Topics1 $select" );
+        //     unset( $select );
+        // }
+        unset( $tmp );
 
+    }
+echo "before all topic_result: " . memory_get_usage() . "\n";
+    unset( $topics_result );
+echo "before unset topic_result: " . memory_get_usage() . "\n";
+return;
 }
+
+return;
 
 // удаляем перерегистрированные раздачи
 // чтобы очистить значения сидов для старой раздачи
@@ -225,11 +234,21 @@ if ( $q[0] > 0 ) {
     Log::append ( "Запись в базу данных сведений о раздачах..." );
     $in = str_repeat( '?,', count( $subsec ) - 1 ) . '?';
     Db::query_database( "INSERT INTO Topics SELECT * FROM temp.Topics1" );
-    Db::query_database( "DELETE FROM Topics WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL AND ( Topics.ss IN ($in) OR Topics.dl = -2 ) )", $subsec );
+    Db::query_database(
+        "DELETE FROM Topics WHERE id IN (
+            SELECT Topics.id FROM Topics
+            LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id
+            WHERE temp.Topics1.id IS NULL AND ( Topics.ss IN ($in) OR Topics.dl = -2 )
+        )",
+        $subsec
+    );
 }
 
 // время последнего обновления
-Db::query_database( 'UPDATE Other SET ud = ? WHERE id = 0', array( $current->format( 'U' ) ) );
+Db::query_database(
+    'UPDATE UpdateTime SET update_topics = ? WHERE id = 0',
+    array( $current_update_time->format( 'U' ) )
+);
 
 /*	
 // получение данных от т.-клиентов
