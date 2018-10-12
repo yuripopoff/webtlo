@@ -226,6 +226,68 @@ class Db {
 			self::query_database('PRAGMA user_version = 3');
 			
 		}
+
+		if ( $version[0]['user_version'] < 4 ) {
+			/*
+			rename table Other -> UpdateTime (id, ud)
+			триггер для UpdateTime при вставке записи на is exists -> выполнять обновление записи
+			триггер для Forums при вставке новой записи -> вставить forum_id в UpdateTime
+			триггер для Forums при удалении записи -> удалить forum_id из UpdateTime
+			изменить триггер для Topics при вставке записи на is exists -> НЕ переносить старые значения для dl и cl
+			*/
+			self::query_database( 'DROP TABLE IF EXISTS Other' );
+			self::query_database( 'CREATE TABLE IF NOT EXISTS UpdateTime (
+				id INTEGER PRIMARY KEY NOT NULL,
+				ud INTEGER NOT NULL DEFAULT 0
+			)' );
+			self::query_database( 'CREATE TRIGGER IF NOT EXISTS updatetime_exists
+				BEFORE INSERT ON UpdateTime
+				WHEN EXISTS (SELECT id FROM UpdateTime WHERE id = NEW.id)
+				BEGIN
+					UPDATE UpdateTime SET
+						ud = NEW.ud
+					WHERE id = NEW.id;
+					SELECT RAISE(IGNORE);
+				END;'
+			);
+			// self::query_database( 'INSERT INTO UpdateTime (id)
+			// 	SELECT id FROM Forums'
+			// );
+			self::query_database( 'CREATE TRIGGER IF NOT EXISTS delete_updatetime
+				AFTER DELETE ON Forums FOR EACH ROW
+				BEGIN
+					DELETE FROM UpdateTime WHERE id = OLD.id;
+				END;'
+			);
+			// self::query_database( 'CREATE TRIGGER IF NOT EXISTS insert_updatetime
+			// 	AFTER INSERT ON Forums
+			// 	BEGIN
+			// 		INSERT INTO UpdateTime (id) VALUES (NEW.id);
+			// 	END;'
+			// );
+			self::query_database( 'DROP TRIGGER IF EXISTS topic_exists' );
+			self::query_database( 'CREATE TRIGGER IF NOT EXISTS topic_exists
+				BEFORE INSERT ON Topics
+				WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
+				BEGIN
+					UPDATE Topics SET
+						ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,
+						na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,
+						hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,
+						se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,
+						si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,
+						st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,
+						rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END,
+						dl = NEW.dl,
+						qt = CASE WHEN NEW.qt IS NULL THEN qt ELSE NEW.qt END,
+						ds = CASE WHEN NEW.ds IS NULL THEN ds ELSE NEW.ds END,
+						cl = NEW.cl
+					WHERE id = NEW.id;
+					SELECT RAISE(IGNORE);
+				END;'
+			);
+			self::query_database( 'PRAGMA user_version = 4' );
+		}
 		
 	}
 	
