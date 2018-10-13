@@ -5,7 +5,7 @@
     требуется предварительно накопить данные о сидах скриптом seeders.php
 */
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/common.php';
 include_once dirname(__FILE__) . '/classes/reports.php';
 
 try {

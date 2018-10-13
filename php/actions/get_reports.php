@@ -2,7 +2,7 @@
 
 try {
 	
-	include_once dirname(__FILE__) . '/../../common.php';
+	include_once dirname(__FILE__) . '/../common.php';
 	include_once dirname(__FILE__) . '/../classes/reports.php';
 
 	// идентификатор подраздела
@@ -31,7 +31,10 @@ try {
 	}
 
 	// update_time[0] время последнего обновления сведений
-	$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
+	$update_time = Db::query_database(
+		"SELECT ud FROM UpdateTime WHERE id = 7777",
+		array(), true, PDO::FETCH_COLUMN
+	);
 
 	// подключаемся к форуму
 	$reports = new Reports( $cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd'] );
@@ -45,7 +48,9 @@ try {
 
 		// вытаскиваем из базы хранимое
 		$stored = Db::query_database(
-			"SELECT ss,COUNT(),SUM(si) FROM Topics WHERE dl = 1 GROUP BY ss",
+			"SELECT ss,COUNT(),SUM(si) FROM Topics
+			LEFT JOIN Clients ON Topics.hs = Clients.hs
+			WHERE dl = 1 GROUP BY ss",
 			array(), true, PDO::FETCH_NUM|PDO::FETCH_UNIQUE
 		);
 
@@ -101,8 +106,8 @@ try {
 
 		// получение данных о раздачах
 		$topics = Db::query_database(
-			"SELECT id,ss,na,si,st
-			FROM Topics
+			"SELECT Topics.id,ss,na,si,st FROM Topics
+			LEFT JOIN Clients ON Topics.hs = Clients.hs
 			WHERE ss = ? AND dl = 1",
 			array( $forum_id ), true
 		);
@@ -197,7 +202,7 @@ try {
 				foreach ( $topics_ids as $topics_ids ) {
 					$in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
 					$values = Db::query_database(
-						"SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in)",
+						"SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
 						$topics_ids, true, PDO::FETCH_NUM
 					);
 					if ( ! isset( $stored[ $keeper['nickname'] ] )  ){
@@ -258,61 +263,6 @@ try {
 
 	}
 
-
-
-/*
-	// формирование отчётов
-	$reports = create_reports( $forum_ids, $tracker_username );
-	
-	$update_time = Db::query_database(
-		"SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN
-	);
-	
-	$pattern =
-		'<h2>Отчёты - ' . date( 'H:i / d.m.Y', $update_time[0] ) . '</h2>'.
-		'<div id="reporttabs" class="report">'.
-			'<ul class="report">%%tabs%%</ul><br />'.
-			'<div id="tabs-wtlocommon" class="report">'.
-				str_replace( '[br]', '', $reports['common'] ).
-			'</div>'.
-			'%%content%%'.
-		'</div>';
-		
-	unset( $reports['common'] );
-	
-	$content = array();
-	
-	$tabs[] = '<li class="report"><a href="#tabs-wtlocommon" class="report">Сводный отчёт</a></li>';
-	
-	foreach ( $reports as $report ) {
-		if ( ! isset ( $report['messages'] ) ) {
-			continue;
-		}
-		$tabs[] = '<li class="report"><a href="#tabs-wtlo'.$report['id'].'" class="report"><span class="rp-header">№ '. $report['id'].'</span> - '.mb_substr( $report['na'], mb_strrpos( $report['na'], ' » ' ) + 3 ).'</a></li>';
-		$header = str_replace( '%%nick%%', $tracker_username, $report['header'] );
-		$header = str_replace( '%%count%%', 1, $header );
-		$header = str_replace( '%%dlqt%%', $report['dlqt'], $header );
-		$header = str_replace( '%%dlsi%%', convert_bytes( $report['dlsi'] ), $header );
-		$content[ $report['id'] ] =
-			'<div id="tabs-wtlo'.$report['id'].'" class="report">'.
-				str_replace( '[br]', '', $header ) . '<br /><br />'.
-				'<div id="accordion-wtlo'.$report['id'].'" class="report acc">'.
-					'%%msg'.$report['id'].'%%'.
-				'</div>'.
-			'</div>';
-		$q = 1;
-		foreach ( $report['messages'] as $message ) {
-			$msg[ $report['id'] ][] = '<h3>Сообщение ' . $q . '</h3>'.
-			'<div title="Выполните двойной клик для выделения всего сообщения">'.
-				str_replace( '[br]', '', $message['text'] ) .
-			'</div>';
-			$q++;
-		}
-		$content[ $report['id'] ] = str_replace( '%%msg'.$report['id'].'%%', implode( '', $msg[ $report['id'] ] ), $content[ $report['id'] ] );
-	}
-	$output = str_replace( '%%tabs%%', implode( '', $tabs ), $pattern );
-	$output = str_replace( '%%content%%', implode( '', $content ), $output );
-*/
 	echo json_encode( array(
 		'report' => $output,
 		'log' => Log::get()

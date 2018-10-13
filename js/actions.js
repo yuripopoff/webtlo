@@ -72,7 +72,7 @@ $(document).ready(function () {
 				$data = $("#config").serialize();
 				$.ajax({
 					type: "POST",
-					url: "php/get_user_details.php",
+					url: "php/actions/get_user_details.php",
 					data: { cfg: $data },
 					success: function (response) {
 						var response = $.parseJSON(response);

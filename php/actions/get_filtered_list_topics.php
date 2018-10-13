@@ -1,6 +1,6 @@
 <?php
 
-include dirname(__FILE__) . '/../../common.php';
+include_once dirname(__FILE__) . '/../common.php';
 
 mb_regex_encoding('UTF-8');
 
@@ -102,7 +102,8 @@ try {
 	// данные о раздачах
 	$topics = Db::query_database(
 		"SELECT Topics.id,na,si,rg,$qt as ds,$avg as avg ".
-		"FROM Topics LEFT JOIN Seeders on Seeders.id = Topics.id ".
+		"FROM Topics LEFT JOIN Seeders ON Seeders.id = Topics.id ".
+		"LEFT JOIN Clients ON Topics.hs = Clients.hs ".
 		"LEFT JOIN (SELECT * FROM Keepers GROUP BY topic_id) Keepers ON Topics.id = Keepers.topic_id ".
 		"LEFT JOIN (SELECT * FROM Blacklist GROUP BY topic_id) Blacklist ON Topics.id = Blacklist.topic_id ".
 		"WHERE $where",

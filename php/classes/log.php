@@ -15,7 +15,7 @@ class Log {
 	}
 	
 	public static function write( $filelog ) {
-		$dir = dirname(__FILE__) . "/../logs";
+		$dir = dirname(__FILE__) . "/../../data/logs";
 		$result = is_writable($dir) || mkdir($dir);
 		if( !$result )
 			echo "Нет или недостаточно прав для доступа к каталогу logs";

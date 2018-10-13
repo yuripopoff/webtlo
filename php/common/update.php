@@ -1,13 +1,14 @@
 <?php
 
-include_once dirname(__FILE__) . '/../../common.php';
-include_once dirname(__FILE__) . '/../../api.php';
-include_once dirname(__FILE__) . '/../../clients.php';
-include_once dirname(__FILE__) . '/../classes/reports.php';
+include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../classes/api.php';
 
 $starttime = microtime( true );
 
 Log::append( "Начато обновление сведений о раздачах..." );
+
+// обновляем дерево подразделов
+include_once dirname(__FILE__) . '/forum_tree.php';
 
 // получение настроек
 if ( ! isset( $cfg ) ) {
@@ -18,40 +19,16 @@ if ( ! isset( $cfg ) ) {
 if ( empty( $cfg['subsections'] ) ) {
     throw new Exception( "Error: Не выбраны хранимые подразделы" );
 }
-/*
-Log::append( "Получение данных от торрент-клиентов..." );
-Log::append( "Количество торрент-клиентов: " . count( $cfg['clients'] ) );
 
-// array( [hash] => ( 'status' => status, 'client' => comment ) )
-// status: 0 - загружается, 1 - раздаётся, -1 - на паузе или стопе
-$clients_data = array();
-
-if ( ! empty( $cfg['clients'] ) ) {
-    foreach ( $cfg['clients'] as $client_id => $client_info ) {
-        $data = array();
-        $client = new $client_info['cl'] (
-            $client_info['ht'], $client_info['pt'], $client_info['lg'],
-            $client_info['pw'], $client_info['cm']
-        );
-        if ( $client->is_online() ) {
-            $data = $client->getTorrents( $client_id );
-            $clients_data += $data;
-            unset( $data );
-        }
-        Log::append( $client_info['cm'] . ' (' . $client_info['cl'] . ') - получено раздач: ' . count( $data ) );
-    }
-}
-*/
 // создаём временные таблицы
 Db::query_database( "CREATE TEMP TABLE UpdateTimeNow AS SELECT id,ud FROM UpdateTime WHERE 0 = 1" );
 Db::query_database( "CREATE TEMP TABLE TopicsUpdate AS SELECT id,ss,se,st,rg,qt,ds FROM Topics WHERE 0 = 1" );
 Db::query_database( "CREATE TEMP TABLE TopicsRenew AS SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1" );
 
 // подключаемся к api
-$api = new Api ( $cfg['api_url'], $cfg['api_key'] );
-
-// обновление дерева подразделов
-// $api->get_cat_forum_tree();
+if ( ! isset( $api ) ) {
+    $api = new Api ( $cfg['api_url'], $cfg['api_key'] );
+}
 
 // все открытые раздачи
 $tor_status = array( 0, 2, 3, 8, 10 );
@@ -60,14 +37,15 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
     // получаем данные о раздачах
     $topics_data = $api->get_forum_topics_data( $forum_id );
+
     if ( empty( $topics_data['result'] ) ) {
         throw new Exception( "Error: Не получены данные о подразделе № " . $forum_id );
     }
-
+    
     // количество и вес раздач
     $topics_count = count( $topics_data['result'] );
     $topics_size = $topics_data['total_size_bytes'];
-
+    
     // получаем дату предыдущего обновления
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = ?",
@@ -84,6 +62,8 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
         Log::append( "Warning: Не требуется обновление для подраздела № " . $forum_id );
         continue;
     }
+
+    Log::append( "Список раздач подраздела № $forum_id получен ($topics_count шт.)" );
 
     // запоминаем время обновления каждого подраздела
     $forums_update_time[ $forum_id ]['ud'] = $topics_data['update_time'];
@@ -284,7 +264,7 @@ if ( $count_update[0] > 0 || $count_renew[0] > 0 ) {
         )",
         $forums_ids
     );
-    // время последнего обновления
+    // время последнего обновления для каждого подфорума
     $forums_update_time = array_chunk( $forums_update_time, 500, true );
     foreach ( $forums_update_time as $forums_update_time ) {
         $select = Db::combine_set( $forums_update_time );
@@ -292,13 +272,15 @@ if ( $count_update[0] > 0 || $count_renew[0] > 0 ) {
         unset( $select );
     }
     Db::query_database( "INSERT INTO UpdateTime (id,ud) SELECT id,ud FROM temp.UpdateTimeNow" );
+    // время окончания обновления
+    Db::query_database(
+        "INSERT INTO UpdateTime (id,ud) SELECT 7777,?",
+        array( Date::now()->format( 'U' ) )
+    );
 }
 
 $endtime = microtime( true );
 
-// echo "runtime: " . round( $endtime - $starttime, 1 ) . "\n";
-
 Log::append( "Обновление сведений завершено (общее время выполнения: " . round( $endtime - $starttime, 1 ) . " с)." );
-echo Log::get( "\n" );
 
 ?>

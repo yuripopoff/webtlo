@@ -3,9 +3,7 @@
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
-include dirname(__FILE__) . '/common.php';
-
-if(!ini_get('date.timezone')) date_default_timezone_set('Europe/Moscow');
+include_once dirname(__FILE__) . '/php/common.php';
 
 // получение настроек
 $cfg = get_settings();
@@ -42,7 +40,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.11</title>
+		<title>web-TLO-0.9.9.0</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>

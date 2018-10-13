@@ -1,7 +1,6 @@
 <?php
 
-include_once dirname(__FILE__) . '/../common.php';
-include_once dirname(__FILE__) . '/phpQuery.php';
+include_once dirname(__FILE__) . '/../phpQuery.php';
 
 class UserDetails {
 	

@@ -137,7 +137,7 @@ function execActionTopics(topics_ids, tor_clients, action, label, force_start, r
 	$.ajax({
 		type: "POST",
 		context: this,
-		url: "php/exec_actions_topics.php",
+		url: "php/actions/exec_actions_topics.php",
 		data: {
 			topics_ids: topics_ids,
 			tor_clients: tor_clients,

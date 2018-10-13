@@ -1,6 +1,6 @@
 <?php
 
-include dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../common.php';
 
 try {
 	

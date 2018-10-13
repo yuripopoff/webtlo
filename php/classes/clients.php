@@ -1,95 +1,5 @@
 <?php
 
-// получение списка раздач
-function get_tor_client_data ( $tcs ) {
-	
-	Log::append ( 'Получение данных от торрент-клиентов...' );
-	Log::append ( 'Количество торрент-клиентов: ' . count($tcs) );
-	$tc_topics = array();
-	
-	if( isset($tcs) && is_array($tcs) ) {
-		foreach($tcs as $id => $tc) {
-			$tmp = array();
-			$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
-			if($client->is_online()) {
-				$tmp = $client->getTorrents( $id );
-				$tc_topics += $tmp;
-			}
-			Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . count($tmp) );
-		}
-	}
-	
-	// array ( [hash] => ( 'status' => status, 'client' => comment ) )
-	// status: 0 - загружается, 1 - раздаётся, -1 - на паузе или стопе
-	return $tc_topics;
-	
-}
-
-// регулировка раздач
-function topics_control( $topics, $tc_topics, $ids, $rule, $tcs = array() ) {
-	
-	$ids = array_flip( $ids );
-	
-	// выбираем раздачи для остановки
-	foreach( $topics as $topic_id => $topic ) {
-		
-		// если нет такой раздачи или идёт загрузка раздачи, идём дальше
-		if( empty( $tc_topics[$ids[$topic_id]]['status'] ) ) continue;
-		$client = $tc_topics[$ids[$topic_id]];
-		
-		// учитываем себя
-		$topic['seeders'] -= $topic['seeders'] ? $client['status'] : 0;
-		// находим значение личей
-		$leechers = $rule['leechers'] ? $topic['leechers'] : 0;
-		// находим значение пиров
-		$peers = $topic['seeders'] + $leechers;
-		// учитываем вновь прибывшего "лишнего" сида
-		$peers += $topic['seeders'] && $peers == $rule['peers'] && $client['status'] == 1 ? 1 : 0;
-		
-		// стопим только, если есть сиды
-		if( ( $peers > $rule['peers'] || !$rule['no_leechers'] && !$topic['leechers'] ) && $topic['seeders'] ) {
-			if( $client['status'] == 1 )
-				$hashes[$client['client']]['stop'][] = $ids[$topic_id];
-		} else {
-			if( $client['status'] == -1 )
-				$hashes[$client['client']]['start'][] = $ids[$topic_id];
-		}
-	}
-	
-	if( empty( $hashes ) )
-		throw new Exception( 'Раздачи не нуждаются в регулировании.' );
-	
-	// выполняем запуск/остановку раздач
-	foreach( $tcs as $cm => $tc ) {
-		if( empty( $hashes[$cm] ) ) continue;
-		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
-		if( $client->is_online() ) {
-			// запускаем
-			if( !empty( $hashes[$cm]['start'] ) ) {
-				$q = count( $hashes[$cm]['start'] );
-				$hashes[$cm]['start'] = array_chunk( $hashes[$cm]['start'], 100 );
-				foreach( $hashes[$cm]['start'] as $start ) {
-					$client->torrentStart( $start );
-				}
-				Log::append( "Запрос на запуск раздач торрент-клиенту \"$cm\" отправлен ($q)." );
-			}
-			// останавливаем
-			if( !empty( $hashes[$cm]['stop'] ) ) {
-				$q = count( $hashes[$cm]['stop'] );
-				$hashes[$cm]['stop'] = array_chunk( $hashes[$cm]['stop'], 100 );
-				foreach( $hashes[$cm]['stop'] as $stop ) {
-					$client->torrentStop( $stop );
-				}
-				Log::append( "Запрос на остановку раздач торрент-клиенту \"$cm\" отправлен ($q)." );
-			}
-		} else {
-			Log::append( "Регулировка раздач не выполнена для торрент-клиента \"$cm\"." );
-			continue;
-		}
-	}
-	
-}
-
 // uTorrent 1.8.2 ~ Windows x32
 class utorrent {
 		
@@ -170,8 +80,7 @@ class utorrent {
     }
 	
 	// получение списка раздач
-	public function getTorrents( $client = "" ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents() {
 		$json = $this->makeRequest("?list=1");
         foreach($json['torrents'] as $torrent)
 		{
@@ -184,8 +93,7 @@ class utorrent {
 						? 1
 						: -1
 					: 0;
-				$data[$torrent[0]]['status'] = $status;
-				$data[$torrent[0]]['client'] = $client;
+				$data[ $torrent[0] ]['dl'] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -261,7 +169,7 @@ class utorrent {
 // Transmission 2.82 ~ Linux x32 (режим демона)
 class transmission {
 	
-	private static $base = "http://%s:%s/transmission/rpc";	
+	private static $base = "http://%s:%s/transmission/rpc";
 	
 	public $host;
     public $port;
@@ -351,8 +259,7 @@ class transmission {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "" ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents() {
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
 		if( !empty($json) ) {
 			foreach( $json['arguments']['torrents'] as $torrent ) {
@@ -365,8 +272,7 @@ class transmission {
 							: 1
 						: 0;
 					$hash = strtoupper( $torrent['hashString'] );
-					$data[$hash]['status'] = $status;
-					$data[$hash]['client'] = $client;
+					$data[$hash]['dl'] = $status;
 				}
 			}
 		}
@@ -534,8 +440,7 @@ class vuze {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "" ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents() {
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
 		if( !empty( $json ) ) {
 			foreach( $json['arguments']['torrents'] as $torrent ) {
@@ -548,8 +453,7 @@ class vuze {
 							: 1
 						: 0;
 					$hash = strtoupper( $torrent['hashString'] );
-					$data[$hash]['status'] = $status;
-					$data[$hash]['client'] = $client;
+					$data[ $hash ]['dl'] = $status;
 				}
 			}
 		}
@@ -734,8 +638,7 @@ class deluge {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "" ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents() {
 		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "paused", "message", "progress" ], {} ], "id" : 9 }');
         foreach($json['result']['torrents'] as $hash => $torrent)
 		{
@@ -748,8 +651,7 @@ class deluge {
 						: 1
 					: 0;
 				$hash = strtoupper( $hash );
-				$data[$hash]['status'] = $status;
-				$data[$hash]['client'] = $client;
+				$data[ $hash ]['dl'] = $status;
 			}
 		}        
         return isset($data) ? $data : array();
@@ -929,8 +831,7 @@ class qbittorrent {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "" ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents() {
 		$json = $this->makeRequest('', 'query/torrents');
         foreach($json as $torrent)
 		{
@@ -943,8 +844,7 @@ class qbittorrent {
 						: 1
 					: 0;
 				$hash = strtoupper( $torrent['hash'] );
-				$data[$hash]['status'] = $status;
-				$data[$hash]['client'] = $client;
+				$data[ $hash ]['dl'] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -1121,8 +1021,7 @@ class ktorrent {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "", $full = false ) {
-		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+	public function getTorrents( $full = false ) {
 		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
         if($full) return $json;
@@ -1137,8 +1036,7 @@ class ktorrent {
 						: 1
 					: 0;
 				$hash = strtoupper( $torrent['info_hash'] );
-				$data[$hash]['status'] = $status;
-				$data[$hash]['client'] = $client;
+				$data[ $hash ]['dl'] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -1163,7 +1061,7 @@ class ktorrent {
     
     // запуск раздач
     public function torrentStart($hash, $force = false) {
-		$torrents = $this->getTorrents("", true);
+		$torrents = $this->getTorrents( true );
         $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
         foreach($hash as $hash){
             if(isset($hashes[strtolower($hash)]))
@@ -1173,7 +1071,7 @@ class ktorrent {
 	
     // остановка раздач
     public function torrentStop($hash) {
-		$torrents = $this->getTorrents("", true);
+		$torrents = $this->getTorrents( true );
         $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
         foreach($hash as $hash){
             if(isset($hashes[strtolower($hash)]))
@@ -1183,7 +1081,7 @@ class ktorrent {
 	
     // удаление раздач
 	public function torrentRemove($hash, $data = false) {
-		$torrents = $this->getTorrents("", true);
+		$torrents = $this->getTorrents( true );
         $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
         foreach($hash as $hash){
             if(isset($hashes[strtolower($hash)]))
@@ -1252,8 +1150,7 @@ class rtorrent {
     }
 
     // получение списка раздач
-    public function getTorrents( $client = "" ) {
-        Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+    public function getTorrents() {
         $res = $this->makeRequest("d.multicall", array("main", "d.get_hash=", "d.get_state=", "d.get_complete=") );
         // ответ в формате array(HASH, STATE active/stopped, COMPLETED)
         foreach($res as $torrent)
@@ -1268,8 +1165,7 @@ class rtorrent {
                     ? 1
                     : -1
                 : 0;
-            $data[$torrent[0]]['status'] = $status;
-            $data[$torrent[0]]['client'] = $client;
+            $data[ $torrent[0] ]['dl'] = $status;
         }
         return isset($data) ? $data : array();
     }

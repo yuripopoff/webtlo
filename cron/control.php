@@ -1,8 +1,8 @@
 <?php
 
-include dirname(__FILE__) . '/../common.php';
-include dirname(__FILE__) . '/../api.php';
-include dirname(__FILE__) . '/../clients.php';
+include_once dirname(__FILE__) . '/../php/common.php';
+include_once dirname(__FILE__) . '/../php/classes/api.php';
+include_once dirname(__FILE__) . '/../php/classes/clients.php';
 
 try {
 	

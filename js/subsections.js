@@ -30,7 +30,7 @@ subsections.selectmenu({
 
 /* добавить подраздел */
 $("#ss-add").autocomplete({
-	source: 'php/get_list_subsections.php',
+	source: 'php/actions/get_list_subsections.php',
 	delay: 1000,
 	select: addSubsection
 }).on("focusout", function () {

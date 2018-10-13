@@ -1,8 +1,8 @@
 <?php
 
-include_once dirname(__FILE__) . '/php/log.php';
-include_once dirname(__FILE__) . '/php/db.php';
-include_once dirname(__FILE__) . '/php/user_details.php';
+include_once dirname(__FILE__) . '/classes/log.php';
+include_once dirname(__FILE__) . '/classes/db.php';
+include_once dirname(__FILE__) . '/classes/user_details.php';
 
 // http://develstudio.ru/php-orion/articles/rabotaem-s-fajlami-ini-v-php
 if (!defined('_BR_'))
@@ -24,7 +24,7 @@ class TIniFileEx {
     
     private static function loadFromFile() {
 		if ( empty( self::$filename ) ) {
-			self::$filename = dirname(__FILE__) . "/config.ini";
+			self::$filename = dirname(__FILE__) . "/../data/config.ini";
 		}
 		self::$rcfg = is_readable( self::$filename )
 			? parse_ini_file( self::$filename, true )

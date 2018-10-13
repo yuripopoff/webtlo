@@ -1,7 +1,6 @@
 <?php
 
-include_once dirname(__FILE__) . '/../../common.php';
-include_once dirname(__FILE__) . '/../../api.php';
+include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 	
 $starttime = microtime( true );
@@ -41,7 +40,10 @@ $sumdlqt = 0;
 $sumdlsi = 0;
 
 // update_time[0] время последнего обновления сведений
-$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
+$update_time = Db::query_database(
+	"SELECT ud FROM UpdateTime WHERE id = 7777",
+	array(), true, PDO::FETCH_COLUMN
+);
 
 foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 	
@@ -65,8 +67,8 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
 	// получение данных о раздачах
 	$topics = Db::query_database(
-		"SELECT id,ss,na,si,st
-		FROM Topics
+		"SELECT Topics.id,ss,na,si,st FROM Topics
+		LEFT JOIN Clients ON Topics.hs = Clients.hs
 		WHERE ss = ? AND dl = 1",
 		array( $forum_id ), true
 	);
@@ -171,7 +173,7 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 			foreach ( $topics_ids as $topics_ids ) {
 				$in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
 				$values = Db::query_database(
-					"SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in)",
+					"SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
 					$topics_ids, true, PDO::FETCH_NUM
 				);
 				if ( ! isset( $stored[ $keeper['nickname'] ] )  ){
