@@ -27,13 +27,13 @@ class Db {
 	}
 	
 	public static function combine_set( $set ) {
-		foreach( $set as $id => &$value ) {
-			$value = array_map ( function ($e) {
-				return is_numeric($e) ? $e : Db::$db->quote($e);
+		foreach ( $set as $id => &$value ) {
+			$value = array_map( function ($e) {
+				return is_numeric( $e ) ? $e : Db::$db->quote( $e );
 			}, $value);
 			$value = ( empty( $value['id'] ) ? "$id," : "" ) . implode ( ',', $value );
 		}
-		$statement = 'SELECT ' . implode (' UNION ALL SELECT ', $set);
+		$statement = 'SELECT ' . implode ( ' UNION ALL SELECT ', $set );
 		return $statement;
 	}
 	
@@ -80,7 +80,8 @@ class Db {
 		// хранители
 		self::query_database('CREATE TABLE IF NOT EXISTS Keepers (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			topic_id INTEGER NOT NULL, nick VARCHAR NOT NULL
+			topic_id INTEGER NOT NULL,
+			nick VARCHAR NOT NULL
 		)');
 		
 		// триггеры
@@ -88,12 +89,12 @@ class Db {
 		// запретить дубликаты в keepers
 		self::query_database('CREATE TRIGGER IF NOT EXISTS Keepers_not_duplicate
 			BEFORE INSERT ON Keepers
-	        WHEN EXISTS (SELECT id FROM Keepers WHERE topic_id = NEW.topic_id AND nick = NEW.nick)
+			WHEN EXISTS (SELECT id FROM Keepers WHERE topic_id = NEW.topic_id AND nick = NEW.nick)
 			BEGIN
-			    SELECT RAISE(IGNORE);
+				SELECT RAISE(IGNORE);
 			END;
 		');
-		
+
 		// обновить при вставке такой же записи
 		self::query_database('CREATE TRIGGER IF NOT EXISTS Forums_update
 			BEFORE INSERT ON Forums
@@ -108,14 +109,14 @@ class Db {
 		// совместимость со старыми версиями базы данных
 		$version = self::query_database('PRAGMA user_version', array(), true);
 		
-		if($version[0]['user_version'] < 1){
+		if ( $version[0]['user_version'] < 1) {
 			self::query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
 			self::query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
 			self::query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
 			self::query_database('PRAGMA user_version = 1');
 		}
 		
-		if($version[0]['user_version'] < 2) {
+		if ( $version[0]['user_version'] < 2) {
 			self::query_database('DROP TRIGGER IF EXISTS Seeders_update');
 			self::query_database('ALTER TABLE Forums ADD COLUMN qt INT');
 			self::query_database('ALTER TABLE Forums ADD COLUMN si INT');
@@ -202,7 +203,7 @@ class Db {
 			
 		}
 		
-		if( $version[0]['user_version'] < 3 ) {
+		if ( $version[0]['user_version'] < 3 ) {
 			
 			self::query_database( 'CREATE TABLE IF NOT EXISTS Blacklist (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -224,6 +225,8 @@ class Db {
 		}
 
 		if ( $version[0]['user_version'] < 4 ) {
+
+			self::query_database( 'DROP TRIGGER IF EXISTS Keepers_not_duplicate' );
 
 			self::query_database( 'DROP TABLE IF EXISTS Other' );
 
@@ -251,18 +254,17 @@ class Db {
 			);
 
 			self::query_database( 'CREATE TABLE IF NOT EXISTS Clients (
-				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-				hs INTEGER NOT NULL,
-				cl INTEGER,
-				dl INTEGER
+				hs VARCHAR NOT NULL,
+				cl INTEGER NOT NULL,
+				dl INTEGER,
+				PRIMARY KEY (hs,cl)
 			)');
 
 			self::query_database( 'CREATE TRIGGER IF NOT EXISTS clients_exists
 				BEFORE INSERT ON Clients
-				WHEN EXISTS (SELECT id FROM Clients WHERE hs = NEW.hs AND cl = NEW.cl)
+				WHEN EXISTS (SELECT hs FROM Clients WHERE hs = NEW.hs AND cl = NEW.cl)
 				BEGIN
-					UPDATE Clients SET
-						dl = NEW.dl
+					UPDATE Clients SET dl = NEW.dl
 					WHERE hs = NEW.hs AND cl = NEW.cl;
 					SELECT RAISE(IGNORE);
 				END;
@@ -271,6 +273,41 @@ class Db {
 			self::query_database( 'INSERT INTO Clients (hs,cl,dl)
 				SELECT hs,cl,dl FROM Topics'
 			);
+
+			self::query_database( 'CREATE TABLE IF NOT EXISTS TopicsUntracked (
+			    id INT PRIMARY KEY NOT NULL,
+			    ss INT,
+			    na VARCHAR,
+			    hs VARCHAR,
+			    se INT,
+			    si INT,
+			    st INT,
+			    rg INT,
+			    qt INT,
+			    ds INT
+			)');
+
+			self::query_database( 'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg,qt,ds)
+				SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics
+				WHERE dl = -2
+			');
+
+			self::query_database( 'DELETE FROM Topics WHERE dl = -2' );
+
+			// self::query_database( 'CREATE TRIGGER IF NOT EXISTS insert_untracked
+			// 	AFTER INSERT ON Clients
+			// 	WHEN NOT EXISTS (SELECT id FROM Topics WHERE hs = NEW.hs)
+			// 	BEGIN
+			// 		INSERT INTO TopicsUntracked (hs) VALUES (NEW.hs);
+			// 	END;
+			// ');
+
+			// self::query_database( 'CREATE TRIGGER IF NOT EXISTS delete_untracked
+			// 	AFTER DELETE ON Clients FOR EACH ROW
+			// 	BEGIN
+			// 		DELETE FROM TopicsUntracked WHERE hs = OLD.hs;
+			// 	END;
+			// ');
 
 			self::query_database( 'DROP TRIGGER IF EXISTS delete_topics' );
 
