@@ -1,9 +1,9 @@
 <?php
 
+$starttime = microtime( true );
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
-
-$starttime = microtime( true );
 
 Log::append ( "Начато обновление списка раздач других хранителей..." );
 
@@ -73,6 +73,6 @@ if ( $count_keepers[0] > 0 ) {
 
 $endtime = microtime( true );
 
-Log::append( "Обновление списка раздач других хранителей завершено (общее время выполнения: " . round( $endtime - $starttime, 1 ) . " с)." );
+Log::append( "Обновление списка раздач других хранителей завершено за " . convert_seconds( $endtime - $starttime ) );
 
 ?>

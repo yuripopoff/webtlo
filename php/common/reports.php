@@ -1,9 +1,10 @@
 <?php
 
+$starttime = microtime( true );
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
-	
-$starttime = microtime( true );
+include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 Log::append ( "Начато выполнение процесса отправки отчётов..." );
 
@@ -307,6 +308,6 @@ if ( $common_exclude ) {
 
 $endtime = microtime( true );
 
-Log::append( "Отправка отчётов завершена (общее время выполнения: " . round( $endtime-$starttime, 1 ) . " с)." );
+Log::append( "Отправка отчётов завершена за " . convert_seconds( $endtime - $starttime ) );
 
 ?>

@@ -19,8 +19,9 @@ $forum_tree_update = Db::query_database(
     array( 8888 ), true, PDO::FETCH_COLUMN
 );
 
-if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 1 ) {
+if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 1 || isset( $forum_tree_update_force ) ) {
 
+    // получение дерева подразделов
     $forum_tree = $api->get_cat_forum_tree();
 
     if ( empty( $forum_tree['result'] ) ) {
@@ -30,39 +31,67 @@ if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 1 ) {
     $forum_tree_update_current = $forum_tree['update_time'];
 
     foreach ( $forum_tree['result']['c'] as $cat_id => $cat_title ) {
-        foreach ( $data['result']['tree'][ $cat_id ] as $forum_id => $subforum ) {
+        foreach ( $forum_tree['result']['tree'][ $cat_id ] as $forum_id => $subforum ) {
             // разделы
-            $forum_title = $cat_title.' » '.$data['result']['f'][ $forum_id ];
+            $forum_title = $cat_title.' » '.$forum_tree['result']['f'][ $forum_id ];
             $forums[ $forum_id ] = array(
-                'na' => $forum_title
+                'na' => $forum_title,
+                'qt' => 0,
+                'si' => 0
             );
             // подразделы
             foreach ( $subforum as $subforum_id ) {
-                $subforum_title = $cat_title.' » '.$data['result']['f'][ $forum_id ].' » '.$data['result']['f'][ $subforum_id ];
+                $subforum_title = $cat_title.' » '.$forum_tree['result']['f'][ $forum_id ].' » '.$forum_tree['result']['f'][ $subforum_id ];
                 $forums[ $subforum_id ] = array(
-                    'na' => $subforum_title
+                    'na' => $subforum_title,
+                    'qt' => 0,
+                    'si' => 0
                 );
             }
         }
     }
     unset( $forum_tree );
 
+    // получение количества и веса раздач по разделам
+    $forum_size = $api->forum_size();
+
+    if ( empty( $forum_size['result'] ) ) {
+        throw new Exception( "Error: Не удалось получить количество и вес раздач по разделам" );
+    }
+
+    $forum_size_update_current = $forum_size['update_time'];
+
+    foreach( $forum_size['result'] as $forum_id => $values ) {
+        if ( empty( $values ) ) {
+            continue;
+        }
+        if ( isset( $forums[ $forum_id ] ) ) {
+            $forums[ $forum_id ] = array_merge(
+                $forums[ $forum_id ],
+                array_combine(
+                    array( 'qt', 'si' ),
+                    $values
+                )
+            );
+        }
+    }
+
     // создаём временную таблицу
-    Db::query_database( 'CREATE TEMP TABLE ForumsNew AS SELECT * FROM Forums WHERE 0 = 1' );
+    Db::query_database( 'CREATE TEMP TABLE ForumsNew AS SELECT id,na,qt,si FROM Forums WHERE 0 = 1' );
 
     // отправляем в базу данных
     $forums = array_chunk( $forums, 500, true );
 
     foreach ( $forums as $forums ) {
         $select = Db::combine_set( $forums );
-        Db::query_database( "INSERT INTO temp.ForumsNew (id,na) $select" );
+        Db::query_database( "INSERT INTO temp.ForumsNew (id,na,qt,si) $select" );
         unset( $select );
     }
     unset( $forums );
 
     Log::append( "Обновление дерева подразделов..." );
 
-    Db::query_database( 'INSERT INTO Forums (id,na) SELECT id,na FROM temp.ForumsNew' );
+    Db::query_database( 'INSERT INTO Forums (id,na,qt,si) SELECT id,na,qt,si FROM temp.ForumsNew' );
 
     Db::query_database( 'DELETE FROM Forums WHERE id IN (
         SELECT Forums.id FROM Forums
@@ -70,7 +99,7 @@ if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 1 ) {
         WHERE temp.ForumsNew.id IS NULL
     )');
 
-    // время обновления дера подразделов
+    // время обновления дерева подразделов
     Db::query_database(
         "INSERT INTO UpdateTime (id,ud) SELECT 8888,?",
         array( $forum_tree_update_current )

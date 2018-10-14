@@ -40,7 +40,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.9.0</title>
+		<title>web-TLO-0.9.9.1</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -50,7 +50,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="stylesheet" href="css/font-awesome.min.css">
-		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
 		<div id="menutabs" class="menu">

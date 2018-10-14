@@ -1,10 +1,10 @@
 <?php
 
 try {
-	
+
 	// файл лога
 	$filelog = "keepers.log";
-	
+
 	// дёргаем скрипт
 	include_once dirname(__FILE__) . '/../php/common/keepers.php';
 

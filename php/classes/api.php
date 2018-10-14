@@ -100,6 +100,16 @@ class Api {
 		}
 		return $data;
 	}
+
+	// Количество и вес раздач по разделам
+	public function forum_size() {
+		$url = $this->api_url . '/v1/static/forum_size?api_key=' . $this->api_key;
+		$data = $this->request_exec( $url );
+		if ( empty( $data['result'] ) ) {
+			return false;
+		}
+		return $data;
+	}
 	
 	// Данные о раздачах по ID раздела
 	public function get_forum_topics_data( $forum_id ) {

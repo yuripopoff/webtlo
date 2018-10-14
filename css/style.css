@@ -101,6 +101,10 @@ li.menu.ui-tabs-active {
 	padding: 0;
 }
 
+.ui-menu-item {
+	font-size: small;
+}
+
 #ui-datepicker-div {
 	font-size: small;
 }

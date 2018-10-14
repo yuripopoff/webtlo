@@ -1,6 +1,7 @@
 <?php
 
 include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 try {
 	

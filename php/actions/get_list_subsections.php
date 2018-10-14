@@ -1,7 +1,7 @@
 <?php
 
 include_once dirname(__FILE__) . '/../common.php';
-include_once dirname(__FILE__) . '/classes/api.php';
+include_once dirname(__FILE__) . '/../classes/api.php';
 
 try {
 	
@@ -15,9 +15,10 @@ try {
 	
 	$q = Db::query_database( "SELECT COUNT() FROM Forums", array(), true, PDO::FETCH_COLUMN );
 	
-	if ( empty ( $q[0] ) ) {
+	if ( empty( $q[0] ) ) {
+		$forum_tree_update_force = true;
 		// дёргаем скрипт
-		include_once dirname(__FILE__) . '/common/forum_tree.php';
+		include_once dirname(__FILE__) . '/../common/forum_tree.php';
 	}
 	
 	$forums = array();
