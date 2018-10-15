@@ -93,7 +93,7 @@ class utorrent {
 						? 1
 						: -1
 					: 0;
-				$data[ $torrent[0] ]['dl'] = $status;
+				$data[ $torrent[0] ] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -272,7 +272,7 @@ class transmission {
 							: 1
 						: 0;
 					$hash = strtoupper( $torrent['hashString'] );
-					$data[$hash]['dl'] = $status;
+					$data[ $hash ] = $status;
 				}
 			}
 		}
@@ -453,7 +453,7 @@ class vuze {
 							: 1
 						: 0;
 					$hash = strtoupper( $torrent['hashString'] );
-					$data[ $hash ]['dl'] = $status;
+					$data[ $hash ] = $status;
 				}
 			}
 		}
@@ -651,7 +651,7 @@ class deluge {
 						: 1
 					: 0;
 				$hash = strtoupper( $hash );
-				$data[ $hash ]['dl'] = $status;
+				$data[ $hash ] = $status;
 			}
 		}        
         return isset($data) ? $data : array();
@@ -844,7 +844,7 @@ class qbittorrent {
 						: 1
 					: 0;
 				$hash = strtoupper( $torrent['hash'] );
-				$data[ $hash ]['dl'] = $status;
+				$data[ $hash ] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -1036,7 +1036,7 @@ class ktorrent {
 						: 1
 					: 0;
 				$hash = strtoupper( $torrent['info_hash'] );
-				$data[ $hash ]['dl'] = $status;
+				$data[ $hash ] = $status;
 			}
 		}
         return isset($data) ? $data : array();
@@ -1165,7 +1165,7 @@ class rtorrent {
                     ? 1
                     : -1
                 : 0;
-            $data[ $torrent[0] ]['dl'] = $status;
+            $data[ $torrent[0] ] = $status;
         }
         return isset($data) ? $data : array();
     }

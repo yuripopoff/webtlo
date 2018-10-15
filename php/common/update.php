@@ -21,9 +21,15 @@ if ( empty( $cfg['subsections'] ) ) {
 }
 
 // создаём временные таблицы
-Db::query_database( "CREATE TEMP TABLE UpdateTimeNow AS SELECT id,ud FROM UpdateTime WHERE 0 = 1" );
-Db::query_database( "CREATE TEMP TABLE TopicsUpdate AS SELECT id,ss,se,st,qt,ds FROM Topics WHERE 0 = 1" );
-Db::query_database( "CREATE TEMP TABLE TopicsRenew AS SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1" );
+Db::query_database( "CREATE TEMP TABLE UpdateTimeNow AS
+    SELECT id,ud FROM UpdateTime WHERE 0 = 1"
+);
+Db::query_database( "CREATE TEMP TABLE TopicsUpdate AS
+    SELECT id,ss,se,st,qt,ds FROM Topics WHERE 0 = 1"
+);
+Db::query_database( "CREATE TEMP TABLE TopicsRenew AS
+    SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1"
+);
 
 // подключаемся к api
 if ( ! isset( $api ) ) {
@@ -57,7 +63,7 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
     );
 
     // при первом обновлении
-    if ( empty( $update_time ) ) {
+    if ( empty( $update_time[0] ) ) {
         $update_time[0] = 0;
     }
 
@@ -94,7 +100,7 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
             $topics_ids = array_keys( $topics_result );
             $in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
             $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($in)",
+                "SELECT id,se,rg,qt,ds,length(na) as lgth FROM Topics WHERE id IN ($in)",
                 $topics_ids, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
             );
             unset( $topics_ids );
@@ -127,17 +133,19 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
             // получить для раздачи info_hash и topic_title
             // если новая раздача или перерегистрированная
-            if ( empty( $previous_data ) || $previous_data['rg'] != $topic_data[2] ) {
-                $db_topics_renew[ $topic_id ]['id'] = $topic_id;
-                $db_topics_renew[ $topic_id ]['ss'] = $forum_id;
-                $db_topics_renew[ $topic_id ]['na'] = '';
-                $db_topics_renew[ $topic_id ]['hs'] = '';
-                $db_topics_renew[ $topic_id ]['se'] = $sum_seeders;
-                $db_topics_renew[ $topic_id ]['si'] = $topic_data[3];
-                $db_topics_renew[ $topic_id ]['st'] = $topic_data[0];
-                $db_topics_renew[ $topic_id ]['rg'] = $topic_data[2];
-                $db_topics_renew[ $topic_id ]['qt'] = $sum_updates;
-                $db_topics_renew[ $topic_id ]['ds'] = $days_update;
+            if ( empty( $previous_data ) || $previous_data['lgth'] == 0 || $previous_data['rg'] != $topic_data[2] ) {
+                $db_topics_renew[ $topic_id ] = array(
+                    'id' => $topic_id,
+                    'ss' => $forum_id,
+                    'na' => '',
+                    'hs' => '',
+                    'se' => $sum_seeders,
+                    'si' => $topic_data[3],
+                    'st' => $topic_data[0],
+                    'rg' => $topic_data[2],
+                    'qt' => $sum_updates,
+                    'ds' => $days_update
+                );
                 // удаляем перерегистрированую раздачу
                 // в том числе, чтобы очистить значения сидов для старой раздачи
                 if ( isset( $previous_data['id'] ) ) {
@@ -158,12 +166,14 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
             }
             unset( $previous_data );
 
-            $db_topics_update[ $topic_id ]['id'] = $topic_id;
-            $db_topics_update[ $topic_id ]['ss'] = $forum_id;
-            $db_topics_update[ $topic_id ]['se'] = $sum_seeders;
-            $db_topics_update[ $topic_id ]['st'] = $topic_data[0];
-            $db_topics_update[ $topic_id ]['qt'] = $sum_updates;
-            $db_topics_update[ $topic_id ]['ds'] = $days_update;
+            $db_topics_update[ $topic_id ] = array(
+                'id' => $topic_id,
+                'ss' => $forum_id,
+                'se' => $sum_seeders,
+                'st' => $topic_data[0],
+                'qt' => $sum_updates,
+                'ds' => $days_update
+            );
         }
         unset( $topics_data_previous );
 
@@ -216,23 +226,33 @@ if ( isset( $topics_delete ) ) {
     }
 }
 
-$count_update = Db::query_database( "SELECT COUNT() FROM temp.TopicsUpdate", array(), true, PDO::FETCH_COLUMN );
-$count_renew = Db::query_database( "SELECT COUNT() FROM temp.TopicsRenew", array(), true, PDO::FETCH_COLUMN );
+$count_update = Db::query_database(
+    "SELECT COUNT() FROM temp.TopicsUpdate",
+    array(), true, PDO::FETCH_COLUMN
+);
+$count_renew = Db::query_database(
+    "SELECT COUNT() FROM temp.TopicsRenew",
+    array(), true, PDO::FETCH_COLUMN
+);
+
 if ( $count_update[0] > 0 || $count_renew[0] > 0 ) {
     Log::append ( "Запись в базу данных сведений о раздачах..." );
     // переносим данные в основную таблицу
+    Db::query_database( "INSERT INTO Topics (id,ss,se,st,qt,ds)
+        SELECT * FROM temp.TopicsUpdate"
+    );
+    Db::query_database( "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
+        SELECT * FROM temp.TopicsRenew"
+    );
     $forums_ids = array_keys( $forums_update_time );
-    $in = str_repeat( '?,', count( $forums_ids ) - 1 ) . '?';
-    Db::query_database( "INSERT INTO Topics (id,ss,se,st,qt,ds) SELECT * FROM temp.TopicsUpdate" );
-    Db::query_database( "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds) SELECT * FROM temp.TopicsRenew" );
+    $in = implode( ',', $forums_ids );
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
             SELECT Topics.id FROM Topics
             LEFT JOIN temp.TopicsUpdate ON Topics.id = temp.TopicsUpdate.id
             LEFT JOIN temp.TopicsRenew ON Topics.id = temp.TopicsRenew.id
             WHERE temp.TopicsUpdate.id IS NULL AND temp.TopicsRenew.id IS NULL AND Topics.ss IN ($in)
-        )",
-        $forums_ids
+        )"
     );
     // время последнего обновления для каждого подраздела
     $forums_update_time = array_chunk( $forums_update_time, 500, true );
