@@ -24,7 +24,7 @@ Db::query_database( "CREATE TEMP TABLE Keepers2 (id INT NOT NULL)" );
 $reports = new Reports ( $cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd'] );
 $topics_ids = $reports->scanning_viewforum( 1584 );
 foreach ( $topics_ids as $topic_id ) {
-    $keepers = $reports->scanning_viewtopic( $topic_id );
+    $keepers = $reports->scanning_viewtopic( $topic_id, false, 30 );
     if ( count( $keepers ) > 0 ) {
         $keepers = array_chunk( $keepers, 500 );
         foreach ( $keepers as $keepers ) {

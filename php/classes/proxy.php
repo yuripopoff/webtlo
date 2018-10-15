@@ -22,7 +22,7 @@ class Proxy {
             self::$proxy = self::set_proxy( $activate_forum, $activate_api );
             Log::append(
                 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address .
-                '" для форума('. $activate_forum .') и API(' . $activate_api . ').'
+                '" для форума('. $activate_forum .') и API(' . $activate_api . ')'
             );
         } else {
             Log::append( 'Прокси-сервер не используется.' );

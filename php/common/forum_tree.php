@@ -15,11 +15,11 @@ if ( ! isset( $api ) ) {
 
 // обновление дерева подразделов
 $forum_tree_update = Db::query_database(
-    "SELECT julianday('now') - julianday( datetime(ud, 'unixepoch') ) FROM UpdateTime WHERE id = ?",
+    "SELECT strftime('%s', 'now') - ud FROM UpdateTime WHERE id = ?",
     array( 8888 ), true, PDO::FETCH_COLUMN
 );
 
-if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 1 || isset( $forum_tree_update_force ) ) {
+if ( empty( $forum_tree_update ) || $forum_tree_update[0] > 3600 ) {
 
     // получение дерева подразделов
     $forum_tree = $api->get_cat_forum_tree();

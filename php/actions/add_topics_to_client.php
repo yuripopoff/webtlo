@@ -175,7 +175,7 @@ try {
 		foreach ( $uploaded_files as $uploaded_files ) {
 			$in = str_repeat( '?,', count( $uploaded_files ) - 1 ) . '?';
 			Db::query_database(
-				"UPDATE Topics SET dl = -1, cl = $tor_client_id WHERE id IN ($in)",
+				"UPDATE Clients SET dl = -1, cl = $tor_client_id WHERE id IN ($in)",
 				$uploaded_files
 			);
 		}

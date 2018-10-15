@@ -269,6 +269,9 @@ if ( $count_update[0] > 0 || $count_renew[0] > 0 ) {
     );
 }
 
+// дёргаем скрипт
+include_once dirname(__FILE__) . '/tor_clients.php';
+
 $endtime = microtime( true );
 
 Log::append( "Обновление сведений о раздачах завершено за " . convert_seconds( $endtime - $starttime ) );

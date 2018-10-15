@@ -1,8 +1,8 @@
 <?php
-$start = microtime( true );
 
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
+include_once dirname(__FILE__) . '/../classes/api.php';
 
 // получение настроек
 if ( ! isset( $cfg ) ) {
@@ -11,7 +11,7 @@ if ( ! isset( $cfg ) ) {
 
 if ( ! empty( $cfg['clients'] ) ) {
     
-    Log::append( "Получение данных от торрент-клиентов..." );
+    Log::append( "Сканирование торрент-клиентов..." );
     
     Log::append( "Количество торрент-клиентов: " . count( $cfg['clients'] ) );
     
@@ -62,7 +62,7 @@ if ( ! empty( $cfg['clients'] ) ) {
 
         }
 
-        Log::append( $client_info['cm'] . ' (' . $client_info['cl'] . ") — получено раздач: $count_torrents" );
+        Log::append( $client_info['cm'] . ' (' . $client_info['cl'] . ") — получено раздач: $count_torrents шт." );
 
     }
 
@@ -92,7 +92,12 @@ if ( ! empty( $cfg['clients'] ) ) {
 
         if ( ! empty( $untracked_hashes ) ) {
 
-            Log::append( "Найдены раздачи из других подразделов: " . count( $untracked_hashes ) . " шт." );
+            Log::append( "Найдено сторонних раздач: " . count( $untracked_hashes ) . " шт." );
+
+            // подключаемся к api
+            if ( ! isset( $api ) ) {
+                $api = new Api ( $cfg['api_url'], $cfg['api_key'] );
+            }
 
             $untracked_ids = $api->get_topic_id( $untracked_hashes );
             unset( $untracked_hashes );
@@ -139,7 +144,7 @@ if ( ! empty( $cfg['clients'] ) ) {
                 unset( $untracked_set );
 
                 $count_untracked = Db::query_database(
-                    "SELECT COUNT() FROM temp.TopicsRenew",
+                    "SELECT COUNT() FROM temp.TopicsUntrackedNew",
                     array(), true, PDO::FETCH_COLUMN
                 );
 
@@ -154,7 +159,6 @@ if ( ! empty( $cfg['clients'] ) ) {
         }
 
     }
-echo convert_seconds(microtime(true)-$start) ."\n";
 
 }
 

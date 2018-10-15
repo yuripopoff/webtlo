@@ -296,6 +296,23 @@ class Db {
 			    rg INT
 			)');
 
+			self::query_database( 'CREATE TRIGGER IF NOT EXISTS untracked_exists
+				BEFORE INSERT ON TopicsUntracked
+				WHEN EXISTS (SELECT id FROM TopicsUntracked WHERE id = NEW.id)
+				BEGIN
+					UPDATE TopicsUntracked SET
+						ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,
+						na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,
+						hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,
+						se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,
+						si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,
+						st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,
+						rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END
+					WHERE id = NEW.id;
+					SELECT RAISE(IGNORE);
+				END;
+			');
+
 			self::query_database( 'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
 				SELECT id,ss,na,hs,se,si,st,rg FROM Topics
 				WHERE dl = -2

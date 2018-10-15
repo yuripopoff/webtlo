@@ -101,7 +101,7 @@ try {
 				foreach ( $hashes_remove as $hashes_remove ) {
 					$in = str_repeat( '?,', count( $hashes_remove ) ) . '?';
 					Db::query_database(
-						"UPDATE Topics SET dl = 0, cl = '' WHERE hs IN ($in)",
+						"DELETE FROM Clients WHERE hs IN ($in)",
 						$hashes_remove
 					);
 					unset( $in );

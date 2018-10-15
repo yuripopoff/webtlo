@@ -28,7 +28,7 @@ class utorrent {
 	
 	// получение токена
 	private function getToken() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'token.html'),
@@ -193,7 +193,7 @@ class transmission {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -374,7 +374,7 @@ class vuze {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -555,7 +555,7 @@ class deluge {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -784,7 +784,7 @@ class qbittorrent {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login'),
@@ -943,7 +943,7 @@ class ktorrent {
 	
 	// получение challenge
 	private function getChallenge() {
-		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
+		// Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login/challenge.xml'),

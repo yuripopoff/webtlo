@@ -1,6 +1,7 @@
 <?php
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
+include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 class Reports {
 	
@@ -197,7 +198,7 @@ class Reports {
 	    return $topics_ids;
 	}
 
-	public function scanning_viewtopic( $topic_id, $exclude = false, $reg_days = 30 ) {
+	public function scanning_viewtopic( $topic_id, $exclude = false, $reg_days = -1 ) {
 	    if ( empty( $topic_id ) ) {
 			return false;
 	    }
@@ -235,8 +236,9 @@ class Reports {
 					}
 					$posted = str_replace( $this->months_ru, $this->months, $posted );
 					$topic_date = DateTime::createFromFormat( 'd-M-y H:i', $posted );
+					$days_diff = Date::now()->diff( $topic_date )->format( '%a' );
 					// пропускаем сообщение, если оно старше $reg_days дней
-					if ( Date::now()->diff( $topic_date )->format( '%a' ) > $reg_days ) {
+					if ( $days_diff > $reg_days && $reg_days != -1 ) {
 						continue;
 					}
 					// получаем id раздач хранимых другими хранителями
@@ -349,85 +351,17 @@ class Reports {
 					$msg = 'Неизвестная ошибка';
 				}
 			}
-			phpQuery::unloadDocuments();
 			Log::append ( "Error: $msg ($topic_id)." );
+			phpQuery::unloadDocuments();
 			return;
 		}
-		phpQuery::unloadDocuments();
 		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
+		phpQuery::unloadDocuments();
 		return $post_id;
 	}
 	
-	public function search_keepers ( $subsections ){
-		Log::append ( 'Получение списка раздач хранимых другими хранителями...' );
-		Db::query_database( "CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1" );
-		foreach ( $subsections as &$subsection ) {
-			$keepers = array();
-			if ( empty( $subsection['ln'] ) ) {
-				$subsection['ln'] = $this->search_topic_id( $subsection['na'] );
-				if( !$subsection['ln'] ) {
-					Log::append( 'Не удалось найти тему со списком для подраздела № ' . $subsection['id'] );
-					continue;
-				}
-				TIniFileEx::write( $subsection['id'], 'link', $subsection['ln'] );
-			}
-			$ln = preg_replace('/.*?([0-9]*)$/', '$1', $subsection['ln']);
-			$i = 0;
-			$page = 1;
-			// получение данных со страниц
-			while($page > 0){
-				$data = $this->make_request(
-					$this->forum_url . '/forum/viewtopic.php?t=' . $ln. '&start=' . $i
-				);
-				$html = phpQuery::newDocumentHTML($data, 'UTF-8');
-				$topic_main = $html->find('table#topic_main');
-				$pages = $html->find('a.pg:last')->prev();
-				if(!empty($pages) && $i == 0)
-					$page = $html->find('a.pg:last')->prev()->text();
-				unset($html);
-				if(!empty($topic_main)){
-					$topic_main = pq($topic_main);
-					foreach($topic_main->find('tbody') as $row){
-						$row = pq($row);
-						$nick = $row->find('p.nick > a')->text();
-						if($nick != $this->login && !empty($nick)){
-							// получаем id раздач хранимых другими хранителями
-							foreach($row->find('a.postLink') as $topic){
-								$topic = pq($topic);
-								if(preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))){
-									$topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-									$keepers[] = array(
-										'id' => $topic_id,
-										'nick' => $nick
-									);
-								}
-							}
-						}
-					}
-				}
-				$page--;
-				$i += 30;
-			}
-			if ( ! empty ( $keepers ) ) {
-				$keepers = array_chunk ( $keepers, 500 );
-				foreach ( $keepers as $keepers ) {
-					$select = Db::combine_set ( $keepers );
-					Db::query_database( "INSERT INTO temp.Keepers1 (topic_id,nick) $select" );
-				}
-			}
-			unset( $keepers );
-		}
-		$q = Db::query_database( "SELECT COUNT() FROM temp.Keepers1", array(), true, PDO::FETCH_COLUMN );
-		if ( $q[0] > 0 ) {
-			Log::append ( "Запись в базу данных списка раздач других хранителей..." );
-			Db::query_database( "INSERT INTO Keepers SELECT * FROM temp.Keepers1" );
-			Db::query_database( "DELETE FROM Keepers WHERE id NOT IN (SELECT Keepers.id FROM temp.Keepers1 LEFT JOIN Keepers ON temp.Keepers1.topic_id  = Keepers.topic_id AND temp.Keepers1.nick = Keepers.nick WHERE Keepers.id IS NOT NULL)" );
-		}
-		TIniFileEx::updateFile();
-	}
-	
-	public function __destruct(){
-		curl_close($this->ch);
+	public function __destruct() {
+		curl_close( $this->ch );
 	}
 	
 }

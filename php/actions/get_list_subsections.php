@@ -16,7 +16,6 @@ try {
 	$q = Db::query_database( "SELECT COUNT() FROM Forums", array(), true, PDO::FETCH_COLUMN );
 	
 	if ( empty( $q[0] ) ) {
-		$forum_tree_update_force = true;
 		// дёргаем скрипт
 		include_once dirname(__FILE__) . '/../common/forum_tree.php';
 	}

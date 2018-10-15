@@ -22,7 +22,9 @@ if ( empty( $cfg['tracker_paswd'] ) ) {
 }
 
 // создаём временную таблицу
-Db::query_database( "CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1" );
+Db::query_database( "CREATE TEMP TABLE KeepersNew AS
+    SELECT * FROM Keepers WHERE 0 = 1"
+);
 
 // подключаемся к форуму
 if ( ! isset( $reports ) ) {
@@ -41,13 +43,13 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
     Log::append( "Сканирование подраздела № $forum_id..." );
 
-    $keepers = $reports->scanning_viewtopic( $topic_id, true, 180 );
+    $keepers = $reports->scanning_viewtopic( $topic_id, true );
 
     if ( ! empty ( $keepers ) ) {
         $keepers = array_chunk( $keepers, 500 );
         foreach ( $keepers as $keepers ) {
-            $select = Db::combine_set ( $keepers );
-            Db::query_database( "INSERT INTO temp.Keepers1 (topic_id,nick) $select" );
+            $select = Db::combine_set( $keepers );
+            Db::query_database( "INSERT INTO temp.KeepersNew (id,nick) $select" );
         }
     }
     unset( $keepers );
@@ -55,17 +57,20 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 }
 
 // записываем изменения в локальную базу
-$count_keepers = Db::query_database( "SELECT COUNT() FROM temp.Keepers1", array(), true, PDO::FETCH_COLUMN );
+$count_keepers = Db::query_database(
+    "SELECT COUNT() FROM temp.KeepersNew",
+    array(), true, PDO::FETCH_COLUMN
+);
 
 if ( $count_keepers[0] > 0 ) {
 
     Log::append( "Запись в базу данных списка раздач других хранителей..." );
 
-    Db::query_database( "INSERT INTO Keepers SELECT * FROM temp.Keepers1" );
+    Db::query_database( "INSERT INTO Keepers SELECT * FROM temp.KeepersNew" );
 
     Db::query_database( "DELETE FROM Keepers WHERE id NOT IN (
-        SELECT Keepers.id FROM temp.Keepers1 LEFT JOIN Keepers
-        ON temp.Keepers1.topic_id  = Keepers.topic_id AND temp.Keepers1.nick = Keepers.nick
+        SELECT Keepers.id FROM temp.KeepersNew LEFT JOIN Keepers
+        ON temp.KeepersNew.id  = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
         WHERE Keepers.id IS NOT NULL
     )" );
 
