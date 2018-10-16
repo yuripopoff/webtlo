@@ -139,15 +139,15 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div class="filter_block ui-widget">
 									<fieldset title="Статусы раздач в торрент-клиенте">
 										<label>
-											<input type="checkbox" name="filter_status[]" value="1" />
+											<input type="checkbox" name="filter_client_status[]" value="1" />
 											храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_status[]" value="0" checked class="default" />
+											<input type="checkbox" name="filter_client_status[]" value="0" checked class="default" />
 											не храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_status[]" value="-1" />
+											<input type="checkbox" name="filter_client_status[]" value="-1" />
 											качаю
 										</label>
 									</fieldset>
@@ -169,23 +169,23 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div class="filter_block ui-widget" title="Статусы раздач на трекере">
 									<fieldset>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="0" />
+											<input type="checkbox" name="filter_tracker_status[]" value="0" />
 											не проверено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="2" checked class="default" />
+											<input type="checkbox" name="filter_tracker_status[]" value="2" checked class="default" />
 											проверено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="3" />
+											<input type="checkbox" name="filter_tracker_status[]" value="3" />
 											недооформлено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="8" checked class="default" />
+											<input type="checkbox" name="filter_tracker_status[]" value="8" checked class="default" />
 											сомнительно
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="10" />
+											<input type="checkbox" name="filter_tracker_status[]" value="10" />
 											временная
 										</label>
 									</fieldset>
@@ -211,7 +211,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											по объёму
 										</label>
 										<label>
-											<input type="radio" name="filter_sort" value="avg" checked class="default" />
+											<input type="radio" name="filter_sort" value="se" checked class="default" />
 											по количеству сидов
 										</label>
 										<label>
@@ -279,7 +279,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</form>
 						<hr />
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
+							<div id="counter">Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="bold">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
 							<div id="topics_result"></div>
 						</div>
 						<hr />

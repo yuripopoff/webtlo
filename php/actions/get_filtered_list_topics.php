@@ -21,17 +21,25 @@ try {
 	// парсим параметры фильтра
 	parse_str( $_POST['filter'] );
 
+	if ( ! isset( $filter_sort ) ) {
+		throw new Exception( "Не выбрано поле для сортировки" );
+	}
+
+	if ( ! isset( $filter_sort_direction ) ) {
+		throw new Exception( "Не выбрано направление сортировки" );
+	}
+
 	// 0 - из других подразделов
 	// -1 - незарегистрированные
 	// -2 - черный список
 	// -3 - все хранимые
 
 	// topic_data => tag,id,na,si,convert(si)rg,se,ds
-	$pattern_topic_block = '<div class="topic_data"><label>%s</label>%s</div>';
+	$pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
 	$pattern_topic_data = array(
 		'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
 		'ds' => '<i class="fa fa-circle %8$s"></i>',
-		'rg' => '<span>[%6$s]</span>',
+		'rg' => ' | <span>%6$s | </span> ',
 		'na' => '<a href="'.$cfg['forum_url'].'/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
 		'si' => ' (%5$s)',
 		'se' => ' - <span class="text-danger">%7$s</span>'
@@ -69,7 +77,7 @@ try {
 					$topic_data['na'],
 					$topic_data['si'],
 					convert_bytes( $topic_data['si'] ),
-					$topic_data['rg']
+					date( 'd.m.Y', $topic_data['rg'] )
 				),
 				'#'.$topic_data['ss']
 			);
@@ -105,18 +113,38 @@ try {
 					$topic_data['na'],
 					$topic_data['si'],
 					convert_bytes( $topic_data['si'] ),
-					$topic_data['rg']
+					date( 'd.m.Y', $topic_data['rg'] )
 				),
 				$topic_data['comment']
 			);
 		}
 
 	} elseif ( $forum_id == -3 || $forum_id > 0 ) {
+
 		// все хранимые
+
+		$forums_ids = $forum_id > 0
+			? array( $forum_id )
+			: array_keys( $cfg['subsections'] );
+
+		$ss = str_repeat( '?,', count( $forums_ids ) - 1 ) . '?';
+		$st = str_repeat( '?,', count( $filter_tracker_status ) - 1 ) . '?';
+		$dl = str_repeat( '?,', count( $filter_client_status ) - 1 ) . '?';
+
+		$topics = Db::query_database(
+			"SELECT Topics.id,na,si,rg,$qt as ds,$avg as avg FROM Topics
+			LEFT JOIN Seeders ON Topics.id = Seeders.id
+			LEFT JOIN Clients ON Topics.hs = Clients.hs
+			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
+			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
+			WHERE ss IN ($ss) AND st IN ($st) AND dl IN ($dl) AND Blacklist.id IS NULL $kp",
+			array_merge( $forums_ids, $filter_tracker_status, $filter_client_status ), true
+		);
+
 	}
 
 	echo json_encode( array(
-		'log' => Log::get(),
+		'log' => '',
 		'topics' => $output,
 		'size' => $filtered_topics_size,
 		'count' => $filtered_topics_count
