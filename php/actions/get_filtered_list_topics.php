@@ -1,49 +1,128 @@
 <?php
 
-include_once dirname(__FILE__) . '/../common.php';
-
-mb_regex_encoding( 'UTF-8' );
-
 try {
 
-	$forum_id = $_POST['forum_id'];
-	$forum_ids = $_POST['forum_ids'];
+	include_once dirname(__FILE__) . '/../common.php';
 
-	parse_str( $_POST['cfg'] );
+	if ( isset( $_POST['forum_id'] ) ) {
+		$forum_id = $_POST['forum_id'];
+	}
+
+	if ( ! isset( $forum_id ) || ! is_numeric( $forum_id ) ) {
+		throw new Exception( "Некорректный идентификатор подраздела: $forum_id" );
+	}
+
+	// получаем настройки
+	$cfg = get_settings();
+
+	// кодировка для regexp
+	mb_regex_encoding( 'UTF-8' );
+
+	// парсим параметры фильтра
 	parse_str( $_POST['filter'] );
 
+	// 0 - из других подразделов
+	// -1 - незарегистрированные
+	// -2 - черный список
+	// -3 - все хранимые
+
+	// topic_data => tag,id,na,si,convert(si)rg,se,ds
 	$pattern_topic_block = '<div class="topic_data"><label>%s</label>%s</div>';
 	$pattern_topic_data = array(
-		'<input type="checkbox" name="topics_ids[]" class="topic" value="%1$s" data-size="%3$s" data-tag="%s">',
-		'<i class="fa fa-circle %s"></i>',
-		'<span>[%5$s]</span>',
-		'<a href="$forum_url/forum/viewtopic.php?t=%1$s" target="_blank">%2$s</a> (%3$s) - <span class="text-danger">%4$s</span>'
+		'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
+		'ds' => '<i class="fa fa-circle %8$s"></i>',
+		'rg' => '<span>[%6$s]</span>',
+		'na' => '<a href="'.$cfg['forum_url'].'/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
+		'si' => ' (%5$s)',
+		'se' => ' - <span class="text-danger">%7$s</span>'
 	);
 
-	// 0 - из других подразделов
-	// -1 - черный список
-	// -2 - все хранимые
+	$output = '';
+	$filtered_topics_count = 0;
+	$filtered_topics_size = 0;
 
-	if ( $forum_id > 0 ) {
-		// хранимые
-		$topics = '';
-	} elseif ( $forum_id == 0 ) {
+	if ( $forum_id == 0 ) {
+
 		// сторонние раздачи
 		$topics = Db::query_database(
-			"SELECT id,na,si,rg FROM TopicsUntracked",
+			"SELECT id,na,si,rg,ss FROM TopicsUntracked",
 			array(), true
 		);
-	} elseif ( $forum_id == -1 ) {
+		// сортировка раздач
+		$topics = natsort_field( $topics, $filter_sort, $filter_sort_direction );
+		// выводим раздачи
+		foreach ( $topics as $topic_id => $topic_data ) {
+			$data = '';
+			$filtered_topics_count++;
+			$filtered_topics_size += $topic_data['si'];
+			foreach ( $pattern_topic_data as $field => $pattern ) {
+				if ( isset( $topic_data[ $field ] ) ) {
+					$data .= $pattern;
+				}
+			}
+			$output .= sprintf(
+				$pattern_topic_block,
+				sprintf(
+					$data,
+					$filtered_topics_count,
+					$topic_data['id'],
+					$topic_data['na'],
+					$topic_data['si'],
+					convert_bytes( $topic_data['si'] ),
+					$topic_data['rg']
+				),
+				'#'.$topic_data['ss']
+			);
+		}
+
+	} elseif ( $forum_id == -2 ) {
+
 		// чёрный список
 		$topics = Db::query_database(
-			"SELECT Topics.id,na,si,rg FROM Topics
+			"SELECT Topics.id,na,si,rg,comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
 			WHERE Blacklist.id IS NOT NULL",
 			array(), true
 		);
-	} elseif ( $forum_id == -2 ) {
+		// сортировка раздач
+		$topics = natsort_field( $topics, $filter_sort, $filter_sort_direction );
+		// выводим раздачи
+		foreach ( $topics as $topic_id => $topic_data ) {
+			$data = '';
+			$filtered_topics_count++;
+			$filtered_topics_size += $topic_data['si'];
+			foreach ( $pattern_topic_data as $field => $pattern ) {
+				if ( isset( $topic_data[ $field ] ) ) {
+					$data .= $pattern;
+				}
+			}
+			$output .= sprintf(
+				$pattern_topic_block,
+				sprintf(
+					$data,
+					$filtered_topics_count,
+					$topic_data['id'],
+					$topic_data['na'],
+					$topic_data['si'],
+					convert_bytes( $topic_data['si'] ),
+					$topic_data['rg']
+				),
+				$topic_data['comment']
+			);
+		}
+
+	} elseif ( $forum_id == -3 || $forum_id > 0 ) {
 		// все хранимые
 	}
+
+	echo json_encode( array(
+		'log' => Log::get(),
+		'topics' => $output,
+		'size' => $filtered_topics_size,
+		'count' => $filtered_topics_count
+	));
+
+	return;
 
 	// некорретный ввод значений сидов
 	if ( ! is_numeric( $filter_rule ) || ! is_numeric( $filter_rule_interval['from'] ) || ! is_numeric( $filter_rule_interval['to'] ) ) {
@@ -154,7 +233,7 @@ try {
 	
 	// данные о других хранителях
 	$keepers = Db::query_database(
-		"SELECT id,nick FROM Keepers WHERE topic_id IN (
+		"SELECT id,nick FROM Keepers WHERE id IN (
 			SELECT id FROM Topics WHERE ss = :forum_id
 		)",
 		array( 'forum_id' => $forum_id ), true, PDO::FETCH_COLUMN|PDO::FETCH_GROUP
