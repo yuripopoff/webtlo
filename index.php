@@ -143,11 +143,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_client_status[]" value="0" checked class="default" />
+											<input type="checkbox" name="filter_client_status[]" value="null" checked class="default" />
 											не храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_client_status[]" value="-1" />
+											<input type="checkbox" name="filter_client_status[]" value="0" />
 											качаю
 										</label>
 									</fieldset>

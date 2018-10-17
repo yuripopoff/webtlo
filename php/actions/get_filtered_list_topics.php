@@ -53,7 +53,7 @@ try {
 
 		// сторонние раздачи
 		$topics = Db::query_database(
-			"SELECT id,na,si,rg,ss FROM TopicsUntracked",
+			"SELECT id,na,si,rg,ss,se FROM TopicsUntracked",
 			array(), true
 		);
 		// сортировка раздач
@@ -77,7 +77,8 @@ try {
 					$topic_data['na'],
 					$topic_data['si'],
 					convert_bytes( $topic_data['si'] ),
-					date( 'd.m.Y', $topic_data['rg'] )
+					date( 'd.m.Y', $topic_data['rg'] ),
+					$topic_data['se']
 				),
 				'#'.$topic_data['ss']
 			);
@@ -121,7 +122,7 @@ try {
 
 	} elseif ( $forum_id == -3 || $forum_id > 0 ) {
 
-		// все хранимые
+		// все хранимые раздачи
 
 		$forums_ids = $forum_id > 0
 			? array( $forum_id )
@@ -129,29 +130,106 @@ try {
 
 		$ss = str_repeat( '?,', count( $forums_ids ) - 1 ) . '?';
 		$st = str_repeat( '?,', count( $filter_tracker_status ) - 1 ) . '?';
-		$dl = str_repeat( '?,', count( $filter_client_status ) - 1 ) . '?';
+		$dl = 'abs(dl) IS ' . implode( ' OR abs(dl) IS ', $filter_client_status );
 
-		$topics = Db::query_database(
-			"SELECT Topics.id,na,si,rg,$qt as ds,$avg as avg FROM Topics
-			LEFT JOIN Seeders ON Topics.id = Seeders.id
-			LEFT JOIN Clients ON Topics.hs = Clients.hs
-			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
+		// 1 - fields, 2 - left join, 3 - where
+		$pattern_statement = "SELECT Topics.id,na,si,rg%s FROM Topics
+			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
-			WHERE ss IN ($ss) AND st IN ($st) AND dl IN ($dl) AND Blacklist.id IS NULL $kp",
-			array_merge( $forums_ids, $filter_tracker_status, $filter_client_status ), true
+			WHERE ss IN ($ss) AND st IN ($st) AND ($dl) AND Blacklist.id IS NULL%s";
+
+		$fields = array();
+		$where = array();
+		$left_join = array();
+
+		if ( isset( $cfg['avg_seeders'] ) ) {
+			// жёсткое ограничение на 30 дней для средних сидов
+			$avg_seeders_period = $avg_seeders_period > 0
+				? $avg_seeders_period > 30
+					? 30
+					: $avg_seeders_period
+				: 1;
+			for ( $i = 0; $i < $avg_seeders_period; $i++ ) {
+				$avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
+				$avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
+				$avg['qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE 1 END";
+			}
+			$qt = implode( '+', $avg['qt'] );
+			$sum_qt = implode( '+', $avg['sum_qt'] );
+			$sum_se = implode( '+', $avg['sum_se'] );
+			$avg = "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END";
+
+			$fields[] = "$qt as ds";
+			$fields[] = "$avg as se";
+			$left_join[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
+		} else {
+			$fields[] = 'se';
+		}
+
+		if ( isset( $is_keepers ) || isset( $not_keepers ) ) {
+			// left keepers + where
+			$left_join[] = 'LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id';
+			$where[] = ! isset( $not_keepers )
+				? isset( $is_keepers )
+					? 'AND Keepers.id IS NOT NULL'
+					: ''
+				: 'AND Keepers.id IS NULL';
+		}
+
+		$statement = sprintf(
+			$pattern_statement,
+			',' . implode( ',', $fields ),
+			' ' . implode( ' ', $left_join ),
+			' ' . implode( ' ', $where )
 		);
 
+		// из базы
 		$topics = Db::query_database(
-			"SELECT Topics.id,na,si,rg%s FROM Topics
-			%s
-			LEFT JOIN Clients ON Topics.hs = Clients.hs
-			%s
-			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
-			WHERE ss IN ($ss) AND st IN ($st) AND dl IN ($dl) AND Blacklist.id IS NULL %s",
-			array_merge( $forums_ids, $filter_tracker_status, $filter_client_status ), true
+			$statement,
+			array_merge(
+				$forums_ids,
+				$filter_tracker_status
+			),
+			true
 		);
-		// ds+avg, seeders
-		// keepers, where keepers.id is null
+
+		// сортировка раздач
+		$topics = natsort_field( $topics, $filter_sort, $filter_sort_direction );
+
+		// выводим раздачи
+		foreach ( $topics as $topic_id => $topic_data ) {
+			$data = '';
+			$filtered_topics_count++;
+			$filtered_topics_size += $topic_data['si'];
+			foreach ( $pattern_topic_data as $field => $pattern ) {
+				if ( isset( $topic_data[ $field ] ) ) {
+					$data .= $pattern;
+				}
+			}
+			// цвет пульки
+			$bullet = isset( $cfg['avg_seeders'] )
+				? $topic_data['ds'] < $avg_seeders_period
+					? $topic_data['ds'] >= $avg_seeders_period / 2
+						? 'text-warning'
+						: 'text-danger'
+					: 'text-success'
+				: '';
+			$output .= sprintf(
+				$pattern_topic_block,
+				sprintf(
+					$data,
+					$filtered_topics_count,
+					$topic_data['id'],
+					$topic_data['na'],
+					$topic_data['si'],
+					convert_bytes( $topic_data['si'] ),
+					date( 'd.m.Y', $topic_data['rg'] ),
+					round( $topic_data['se'], 2 ),
+					$bullet
+				),
+				''
+			);
+		}
 
 	}
 
@@ -217,7 +295,7 @@ try {
 			? 'AND Keepers.id IS NOT NULL'
 			: ''
 		: 'AND Keepers.id IS NULL';
-	
+
 	$ds = isset( $avg_seeders_complete ) && isset( $avg_seeders )
 		? $avg_seeders_period
 		: 0;
