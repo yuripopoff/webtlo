@@ -141,6 +141,18 @@ try {
 			array_merge( $forums_ids, $filter_tracker_status, $filter_client_status ), true
 		);
 
+		$topics = Db::query_database(
+			"SELECT Topics.id,na,si,rg%s FROM Topics
+			%s
+			LEFT JOIN Clients ON Topics.hs = Clients.hs
+			%s
+			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
+			WHERE ss IN ($ss) AND st IN ($st) AND dl IN ($dl) AND Blacklist.id IS NULL %s",
+			array_merge( $forums_ids, $filter_tracker_status, $filter_client_status ), true
+		);
+		// ds+avg, seeders
+		// keepers, where keepers.id is null
+
 	}
 
 	echo json_encode( array(

@@ -55,17 +55,6 @@ foreach ( $forums_ids as $forum_id ) {
 		continue;
 	}
 
-    // получаем данные о раздачах
-    $topics_data = $api->get_forum_topics_data( $forum_id );
-
-    if ( empty( $topics_data['result'] ) ) {
-        throw new Exception( "Error: Не получены данные о подразделе № " . $forum_id );
-    }
-    
-    // количество и вес раздач
-    $topics_count = count( $topics_data['result'] );
-    $topics_size = $topics_data['total_size_bytes'];
-    
     // получаем дату предыдущего обновления
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = ?",
@@ -77,11 +66,24 @@ foreach ( $forums_ids as $forum_id ) {
         $update_time[0] = 0;
     }
 
-    // если дата текущего обновления совпадает с предыдущей
-    if ( $update_time[0] == $topics_data['update_time'] ) {
+    $time_diff = time() - $update_time[0];
+
+    // если не прошёл час
+    if ( $time_diff < 3600 ) {
         Log::append( "Warning: Не требуется обновление для подраздела № " . $forum_id );
         continue;
     }
+
+    // получаем данные о раздачах
+    $topics_data = $api->get_forum_topics_data( $forum_id );
+
+    if ( empty( $topics_data['result'] ) ) {
+        throw new Exception( "Error: Не получены данные о подразделе № " . $forum_id );
+    }
+
+    // количество и вес раздач
+    $topics_count = count( $topics_data['result'] );
+    $topics_size = $topics_data['total_size_bytes'];
 
     // Log::append( "Список раздач подраздела № $forum_id получен ($topics_count шт.)" );
 
@@ -106,15 +108,13 @@ foreach ( $forums_ids as $forum_id ) {
     foreach ( $topics_result as $topics_result ) {
 
         // получаем данные о раздачах за предыдущее обновление
-        if ( $cfg['avg_seeders'] ) {
-            $topics_ids = array_keys( $topics_result );
-            $in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
-            $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($in)",
-                $topics_ids, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
-            );
-            unset( $topics_ids );
-        }
+        $topics_ids = array_keys( $topics_result );
+        $in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
+        $topics_data_previous = Db::query_database(
+            "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($in)",
+            $topics_ids, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
+        );
+        unset( $topics_ids );
 
 		// разбираем раздачи
         // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes )
@@ -164,14 +164,16 @@ foreach ( $forums_ids as $forum_id ) {
             }
 
             // алгоритм нахождения среднего значения сидов
-			$days_update = $previous_data['ds'];
-			// по прошествии дня
-			if ( $days_diff > 0 ) {
-				$days_update++;
-			} else {
-				$sum_updates += $previous_data['qt'];
-				$sum_seeders += $previous_data['se'];
-			}
+            if ( $cfg['avg_seeders'] ) {
+                $days_update = $previous_data['ds'];
+                // по прошествии дня
+                if ( $days_diff > 0 ) {
+                    $days_update++;
+                } else {
+                    $sum_updates += $previous_data['qt'];
+                    $sum_seeders += $previous_data['se'];
+                }
+            }
             unset( $previous_data );
 
             $db_topics_update[ $topic_id ] = array(
