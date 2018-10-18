@@ -210,7 +210,7 @@ class Db {
 			self::query_database( 'CREATE TABLE IF NOT EXISTS Keepers (
 				id INTEGER NOT NULL,
 				nick VARCHAR NOT NULL,
-				rg INTEGER,
+				posted INTEGER,
 				PRIMARY KEY (id, nick)
 			)');
 
@@ -218,7 +218,7 @@ class Db {
 				BEFORE INSERT ON Keepers
 				WHEN EXISTS (SELECT id FROM Keepers WHERE id = NEW.id AND nick = NEW.nick)
 				BEGIN
-					UPDATE Keepers SET rg = NEW.rg
+					UPDATE Keepers SET posted = NEW.posted
 					WHERE id = NEW.id AND nick = NEW.nick;
 					SELECT RAISE(IGNORE);
 				END;

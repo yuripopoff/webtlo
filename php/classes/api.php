@@ -124,8 +124,8 @@ class Api {
 		return $data;
 	}
 
-	// Количество пиров по ID темы
-	public function get_peer_stats( $ids ) {
+	// Количество пиров по ID/HASH темы
+	public function get_peer_stats( $ids, $by = 'topic_id' ) {
 		if ( empty( $ids ) ) {
 			return false;
 		}
@@ -133,16 +133,19 @@ class Api {
 		$ids = array_chunk( $ids, $this->limit );
 		foreach ( $ids as $ids ) {
 			$value = implode( ',', $ids );
-			$url = $this->api_url . '/v1/get_peer_stats?by=topic_id&api_key=' . $this->api_key . '&val=' . $value;
+			$url = $this->api_url . "/v1/get_peer_stats?by=$by&api_key=" . $this->api_key . '&val=' . $value;
 			$data = $this->request_exec( $url );
 			unset( $value );
 			foreach ( $data['result'] as $topic_id => $topic ) {
 				if ( ! empty( $topic ) ) {
-					$topics[ $topic_id ] = array_combine( array(
-						'seeders',
-						'leechers',
-						'seeder_last_seen'
-					), $topic );
+					$topics[ $topic_id ] = array_combine(
+						array(
+							'seeders',
+							'leechers',
+							'seeder_last_seen'
+						),
+						$topic
+					);
 				}
 			}
 		}

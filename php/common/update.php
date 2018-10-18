@@ -58,8 +58,6 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
     $time_diff = time() - $update_time[0];
 
-    Log::append( "time_diff: $time_diff" );
-
     // если не прошёл час
     if ( $time_diff < 3600 ) {
         Log::append( "Warning: Не требуется обновление для подраздела № " . $forum_id );
@@ -90,8 +88,6 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
 
     // разница в днях между обновлениями сведений
     $days_diff = $current_update_time->diff( $previous_update_time )->format( '%d' );
-
-    Log::append( "days_diff #$forum_id: $days_diff" );
 
     // разбиваем result по 500 раздач
     $topics_result = array_chunk( $topics_data['result'], 500, true );
