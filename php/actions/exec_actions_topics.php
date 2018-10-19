@@ -44,7 +44,9 @@ try {
 
 	$topics_ids = implode( ',', $topics_ids );
 	$hashes = Db::query_database(
-		"SELECT cl,hs FROM Topics WHERE id IN ($topics_ids)",
+		"SELECT cl,Clients.hs FROM Topics
+		LEFT JOIN Clients ON Topics.hs = Clients.hs
+		WHERE id IN ($topics_ids)",
 		array(),
 		true,
 		PDO::FETCH_GROUP|PDO::FETCH_COLUMN
