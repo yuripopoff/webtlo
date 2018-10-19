@@ -41,10 +41,10 @@ foreach ( $cfg['clients'] as $client_id => $client_info ) {
 
 		$count_torrents = count( $torrents );
 
-		// по 900 хэшей за раз
+		// ограничение на количество хэшей за раз
 		$torrents_hashes = array_chunk(
 			array_keys( $torrents ),
-			900
+			999 - count( $forums_ids )
 		);
 
 		$topics_hashes = array();
