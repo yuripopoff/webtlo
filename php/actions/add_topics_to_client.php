@@ -67,7 +67,7 @@ try {
 	$proxy_auth = "$proxy_login:$proxy_paswd";
 	Proxy::options( $activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth );
 	
-	$tmpdir = dirname( __FILE__ ) . '/../../tfiles/';
+	$tmpdir = dirname( __FILE__ ) . '/../../data/tfiles/';
 	
 	// очищаем временный каталог
 	rmdir_recursive( $tmpdir );
