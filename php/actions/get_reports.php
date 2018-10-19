@@ -50,7 +50,7 @@ try {
 		$stored = Db::query_database(
 			"SELECT ss,COUNT(),SUM(si) FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs
-			WHERE dl = 1 GROUP BY ss",
+			WHERE dl IN (1,-1) GROUP BY ss",
 			array(), true, PDO::FETCH_NUM|PDO::FETCH_UNIQUE
 		);
 
@@ -108,7 +108,7 @@ try {
 		$topics = Db::query_database(
 			"SELECT Topics.id,ss,na,si,st FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs
-			WHERE ss = ? AND dl = 1",
+			WHERE ss = ? AND dl IN (1,-1)",
 			array( $forum_id ), true
 		);
 
