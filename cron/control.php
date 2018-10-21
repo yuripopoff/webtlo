@@ -2,20 +2,18 @@
 
 try {
 
-	// файл лога
-	$filelog = "control.log";
+    // файл лога
+    $filelog = "control.log";
 
-	// дёргаем скрипт
-	include_once dirname(__FILE__) . '/../php/common/control.php';
+    // дёргаем скрипт
+    include_once dirname(__FILE__) . '/../php/common/control.php';
 
-	// записываем в лог
-	Log::write( $filelog );
+    // записываем в лог
+    Log::write($filelog);
 
-} catch ( Exception $e ) {
+} catch (Exception $e) {
 
-	Log::append( $e->getMessage() );
-	Log::write( $filelog );
+    Log::append($e->getMessage());
+    Log::write($filelog);
 
 }
-
-?>

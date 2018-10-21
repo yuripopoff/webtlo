@@ -1,56 +1,61 @@
 <?php
 
-class Db {
-	
-	public static $db;
-	
-	public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
-		self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
-		$sth = self::$db->prepare($sql);
-		if(self::$db->errorCode() != '0000') {
-			$error = self::$db->errorInfo();
-			throw new Exception( 'SQL ошибка: ' . $error[2] );
-		}
-		$sth->execute($param);
-		return $fetch ? $sth->fetchAll($pdo) : true;
-	}
-	
-	// https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
-	public static function lexa_ci_utf8_like ( $mask, $value ) {
-	    $mask = str_replace(
-	        array("%", "_"),
-	        array(".*?", "."),
-	        preg_quote($mask, "/")
-	    );
-	    $mask = "/^$mask$/ui";
-	    return preg_match ( $mask, $value );
-	}
-	
-	public static function combine_set( $set ) {
-		foreach ( $set as $id => &$value ) {
-			$value = array_map( function ($e) {
-				return is_numeric( $e ) ? $e : Db::$db->quote( $e );
-			}, $value);
-			$value = ( empty( $value['id'] ) ? "$id," : "" ) . implode ( ',', $value );
-		}
-		$statement = 'SELECT ' . implode ( ' UNION ALL SELECT ', $set );
-		return $statement;
-	}
-	
-	public static function create() {
-		
-		self::$db = new PDO( 'sqlite:' . dirname(__FILE__) . '/../../data/webtlo.db' );
-		
-		// таблицы
-		
-		// список подразделов
-		self::query_database('CREATE TABLE IF NOT EXISTS Forums (
+class Db
+{
+
+    public static $db;
+
+    public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC)
+    {
+        self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
+        $sth = self::$db->prepare($sql);
+        if (self::$db->errorCode() != '0000') {
+            $error = self::$db->errorInfo();
+            throw new Exception('SQL ошибка: ' . $error[2]);
+        }
+        $sth->execute($param);
+        return $fetch ? $sth->fetchAll($pdo) : true;
+    }
+
+    // https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
+    public static function lexa_ci_utf8_like($mask, $value)
+    {
+        $mask = str_replace(
+            array("%", "_"),
+            array(".*?", "."),
+            preg_quote($mask, "/")
+        );
+        $mask = "/^$mask$/ui";
+        return preg_match($mask, $value);
+    }
+
+    public static function combine_set($set)
+    {
+        foreach ($set as $id => &$value) {
+            $value = array_map(function ($e) {
+                return is_numeric($e) ? $e : Db::$db->quote($e);
+            }, $value);
+            $value = (empty($value['id']) ? "$id," : "") . implode(',', $value);
+        }
+        $statement = 'SELECT ' . implode(' UNION ALL SELECT ', $set);
+        return $statement;
+    }
+
+    public static function create()
+    {
+
+        self::$db = new PDO('sqlite:' . dirname(__FILE__) . '/../../data/webtlo.db');
+
+        // таблицы
+
+        // список подразделов
+        self::query_database('CREATE TABLE IF NOT EXISTS Forums (
 				id INT NOT NULL PRIMARY KEY,
 				na VARCHAR NOT NULL
 		)');
-		
-		// топики
-		self::query_database('CREATE TABLE IF NOT EXISTS Topics (
+
+        // топики
+        self::query_database('CREATE TABLE IF NOT EXISTS Topics (
 				id INT NOT NULL PRIMARY KEY,
 				ss INT NOT NULL,
 				na VARCHAR NOT NULL,
@@ -61,9 +66,9 @@ class Db {
 				rg INT NOT NULL,
 				dl INT NOT NULL DEFAULT 0
 		)');
-		
-		// средние сиды
-		self::query_database('CREATE TABLE IF NOT EXISTS Seeders (
+
+        // средние сиды
+        self::query_database('CREATE TABLE IF NOT EXISTS Seeders (
 			id INT NOT NULL PRIMARY KEY,
 			d0 INT, d1 INT,d2 INT,d3 INT,d4 INT,d5 INT,d6 INT,
 			d7 INT,d8 INT,d9 INT,d10 INT,d11 INT,d12 INT,d13 INT,
@@ -76,31 +81,31 @@ class Db {
 			q20 INT,q21 INT,q22 INT,q23 INT,q24 INT,q25 INT,
 			q26 INT,q27 INT,q28 INT,q29 INT
 		)');
-		
-		// хранители
-		self::query_database('CREATE TABLE IF NOT EXISTS Keepers (
+
+        // хранители
+        self::query_database('CREATE TABLE IF NOT EXISTS Keepers (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 			topic_id INTEGER NOT NULL,
 			nick VARCHAR NOT NULL
 		)');
-		
-		// совместимость со старыми версиями базы данных
-		$version = self::query_database('PRAGMA user_version', array(), true);
-		
-		if ( $version[0]['user_version'] < 1) {
-			self::query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
-			self::query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
-			self::query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
-			self::query_database('PRAGMA user_version = 1');
-		}
-		
-		if ( $version[0]['user_version'] < 2) {
-			self::query_database('DROP TRIGGER IF EXISTS Seeders_update');
-			self::query_database('ALTER TABLE Forums ADD COLUMN qt INT');
-			self::query_database('ALTER TABLE Forums ADD COLUMN si INT');
-			self::query_database('ALTER TABLE Topics RENAME TO TopicsTemp');
-			
-			self::query_database('CREATE TABLE IF NOT EXISTS Topics (
+
+        // совместимость со старыми версиями базы данных
+        $version = self::query_database('PRAGMA user_version', array(), true);
+
+        if ($version[0]['user_version'] < 1) {
+            self::query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
+            self::query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
+            self::query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
+            self::query_database('PRAGMA user_version = 1');
+        }
+
+        if ($version[0]['user_version'] < 2) {
+            self::query_database('DROP TRIGGER IF EXISTS Seeders_update');
+            self::query_database('ALTER TABLE Forums ADD COLUMN qt INT');
+            self::query_database('ALTER TABLE Forums ADD COLUMN si INT');
+            self::query_database('ALTER TABLE Topics RENAME TO TopicsTemp');
+
+            self::query_database('CREATE TABLE IF NOT EXISTS Topics (
 			    id INT PRIMARY KEY NOT NULL,
 			    ss INT,
 			    na VARCHAR,
@@ -114,28 +119,28 @@ class Db {
 			    ds INT,
 			    cl VARCHAR
 			)');
-			
-			self::query_database('INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,dl,qt,ds,cl)
+
+            self::query_database('INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,dl,qt,ds,cl)
 				SELECT id,ss,na,hs,se,si,st,rg,dl,rt,ds,cl FROM TopicsTemp'
-			);
-			
-			self::query_database('DROP TABLE TopicsTemp');
-			
-			self::query_database('CREATE TRIGGER IF NOT EXISTS delete_seeders
+            );
+
+            self::query_database('DROP TABLE TopicsTemp');
+
+            self::query_database('CREATE TRIGGER IF NOT EXISTS delete_seeders
 				AFTER DELETE ON Topics FOR EACH ROW
 				BEGIN
 					DELETE FROM Seeders WHERE id = OLD.id;
 				END;'
-			);
-			
-			self::query_database('CREATE TRIGGER IF NOT EXISTS insert_seeders
+            );
+
+            self::query_database('CREATE TRIGGER IF NOT EXISTS insert_seeders
 				AFTER INSERT ON Topics
 				BEGIN
 					INSERT INTO Seeders (id) VALUES (NEW.id);
 				END;
 			');
-			
-			self::query_database('CREATE TRIGGER IF NOT EXISTS topic_exists
+
+            self::query_database('CREATE TRIGGER IF NOT EXISTS topic_exists
 				BEFORE INSERT ON Topics
 				WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
 				BEGIN
@@ -154,9 +159,9 @@ class Db {
 					WHERE id = NEW.id;
 					SELECT RAISE(IGNORE);
 				END;'
-			);
-			
-			self::query_database('CREATE TRIGGER IF NOT EXISTS transfer_seeders
+            );
+
+            self::query_database('CREATE TRIGGER IF NOT EXISTS transfer_seeders
 				AFTER UPDATE ON Topics
 				WHEN NEW.ds <> OLD.ds
 				BEGIN
@@ -175,46 +180,46 @@ class Db {
 						q25 = q24, q26 = q25, q27 = q26, q28 = q27, q29 = q28
 					WHERE id = NEW.id;
 				END;'
-			);
-			
-			self::query_database('PRAGMA user_version = 2');
-			
-		}
-		
-		if ( $version[0]['user_version'] < 3 ) {
-			
-			self::query_database( 'CREATE TABLE IF NOT EXISTS Blacklist (
+            );
+
+            self::query_database('PRAGMA user_version = 2');
+
+        }
+
+        if ($version[0]['user_version'] < 3) {
+
+            self::query_database('CREATE TABLE IF NOT EXISTS Blacklist (
 				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 				topic_id INTEGER NOT NULL
-			)' );
-			
-			self::query_database( 'DROP TRIGGER delete_seeders' );
-			
-			self::query_database('CREATE TRIGGER IF NOT EXISTS delete_topics
+			)');
+
+            self::query_database('DROP TRIGGER delete_seeders');
+
+            self::query_database('CREATE TRIGGER IF NOT EXISTS delete_topics
 				AFTER DELETE ON Topics FOR EACH ROW
 				BEGIN
 					DELETE FROM Seeders WHERE id = OLD.id;
 					DELETE FROM Blacklist WHERE topic_id = OLD.id;
 				END;'
-			);
-			
-			self::query_database('PRAGMA user_version = 3');
-			
-		}
+            );
 
-		if ( $version[0]['user_version'] < 4 ) {
+            self::query_database('PRAGMA user_version = 3');
 
-			// меняем структуру таблицы Keepers
-			self::query_database( 'ALTER TABLE Keepers RENAME TO KeepersTemp' );
+        }
 
-			self::query_database( 'CREATE TABLE IF NOT EXISTS Keepers (
+        if ($version[0]['user_version'] < 4) {
+
+            // меняем структуру таблицы Keepers
+            self::query_database('ALTER TABLE Keepers RENAME TO KeepersTemp');
+
+            self::query_database('CREATE TABLE IF NOT EXISTS Keepers (
 				id INTEGER NOT NULL,
 				nick VARCHAR NOT NULL,
 				posted INTEGER,
 				PRIMARY KEY (id, nick)
 			)');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS keepers_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS keepers_exists
 				BEFORE INSERT ON Keepers
 				WHEN EXISTS (SELECT id FROM Keepers WHERE id = NEW.id AND nick = NEW.nick)
 				BEGIN
@@ -224,21 +229,21 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'INSERT INTO Keepers (id,nick)
+            self::query_database('INSERT INTO Keepers (id,nick)
 				SELECT topic_id,nick FROM KeepersTemp'
-			);
+            );
 
-			self::query_database( 'DROP TABLE KeepersTemp' );
+            self::query_database('DROP TABLE KeepersTemp');
 
-			// время обновления сведений
-			self::query_database( 'DROP TABLE IF EXISTS Other' );
+            // время обновления сведений
+            self::query_database('DROP TABLE IF EXISTS Other');
 
-			self::query_database( 'CREATE TABLE IF NOT EXISTS UpdateTime (
+            self::query_database('CREATE TABLE IF NOT EXISTS UpdateTime (
 				id INTEGER PRIMARY KEY NOT NULL,
 				ud INTEGER
 			)');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS updatetime_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS updatetime_exists
 				BEFORE INSERT ON UpdateTime
 				WHEN EXISTS (SELECT id FROM UpdateTime WHERE id = NEW.id)
 				BEGIN
@@ -248,22 +253,22 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS updatetime_delete
+            self::query_database('CREATE TRIGGER IF NOT EXISTS updatetime_delete
 				AFTER DELETE ON Forums FOR EACH ROW
 				BEGIN
 					DELETE FROM UpdateTime WHERE id = OLD.id;
 				END;
 			');
 
-			// данные от торрент-клиентов
-			self::query_database( 'CREATE TABLE IF NOT EXISTS Clients (
+            // данные от торрент-клиентов
+            self::query_database('CREATE TABLE IF NOT EXISTS Clients (
 				hs VARCHAR NOT NULL,
 				cl INTEGER NOT NULL,
 				dl INTEGER,
 				PRIMARY KEY (hs,cl)
 			)');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS clients_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS clients_exists
 				BEFORE INSERT ON Clients
 				WHEN EXISTS (SELECT hs FROM Clients WHERE hs = NEW.hs AND cl = NEW.cl)
 				BEGIN
@@ -273,19 +278,19 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS untracked_delete
+            self::query_database('CREATE TRIGGER IF NOT EXISTS untracked_delete
 				AFTER DELETE ON Clients FOR EACH ROW
 				BEGIN
 					DELETE FROM TopicsUntracked WHERE hs = OLD.hs;
 				END;
 			');
 
-			self::query_database( 'INSERT INTO Clients (hs,cl,dl)
+            self::query_database('INSERT INTO Clients (hs,cl,dl)
 				SELECT hs,cl,dl FROM Topics'
-			);
+            );
 
-			// переносим хранимые неотслеживаемые раздачи
-			self::query_database( 'CREATE TABLE IF NOT EXISTS TopicsUntracked (
+            // переносим хранимые неотслеживаемые раздачи
+            self::query_database('CREATE TABLE IF NOT EXISTS TopicsUntracked (
 			    id INT PRIMARY KEY NOT NULL,
 			    ss INT,
 			    na VARCHAR,
@@ -296,7 +301,7 @@ class Db {
 			    rg INT
 			)');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS untracked_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS untracked_exists
 				BEFORE INSERT ON TopicsUntracked
 				WHEN EXISTS (SELECT id FROM TopicsUntracked WHERE id = NEW.id)
 				BEGIN
@@ -313,22 +318,22 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
+            self::query_database('INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
 				SELECT id,ss,na,hs,se,si,st,rg FROM Topics
 				WHERE dl = -2
 			');
 
-			self::query_database( 'DELETE FROM Topics WHERE dl = -2' );
+            self::query_database('DELETE FROM Topics WHERE dl = -2');
 
-			// меняем структуру таблицы Blacklist
-			self::query_database( 'ALTER TABLE Blacklist RENAME TO BlacklistTemp' );
+            // меняем структуру таблицы Blacklist
+            self::query_database('ALTER TABLE Blacklist RENAME TO BlacklistTemp');
 
-			self::query_database( 'CREATE TABLE IF NOT EXISTS Blacklist (
+            self::query_database('CREATE TABLE IF NOT EXISTS Blacklist (
 				id INTEGER PRIMARY KEY NOT NULL,
 				comment VARCHAR
 			)');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS blacklist_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS blacklist_exists
 				BEFORE INSERT ON Blacklist
 				WHEN EXISTS (SELECT id FROM Blacklist WHERE id = NEW.id)
 				BEGIN
@@ -338,18 +343,18 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'INSERT INTO Blacklist (id)
+            self::query_database('INSERT INTO Blacklist (id)
 				SELECT topic_id FROM BlacklistTemp
 			');
 
-			self::query_database( 'DROP TABLE BlacklistTemp' );
+            self::query_database('DROP TABLE BlacklistTemp');
 
-			// меняем структуру таблицы Topics
-			self::query_database( 'DROP TRIGGER IF EXISTS delete_topics' );
+            // меняем структуру таблицы Topics
+            self::query_database('DROP TRIGGER IF EXISTS delete_topics');
 
-			self::query_database( 'ALTER TABLE Topics RENAME TO TopicsTemp' );
+            self::query_database('ALTER TABLE Topics RENAME TO TopicsTemp');
 
-			self::query_database( 'CREATE TABLE IF NOT EXISTS Topics (
+            self::query_database('CREATE TABLE IF NOT EXISTS Topics (
 			    id INT PRIMARY KEY NOT NULL,
 			    ss INT,
 			    na VARCHAR,
@@ -362,13 +367,13 @@ class Db {
 			    ds INT
 			)');
 
-			self::query_database( 'INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
+            self::query_database('INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
 				SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM TopicsTemp'
-			);
+            );
 
-			self::query_database( 'DROP TABLE TopicsTemp' );
+            self::query_database('DROP TABLE TopicsTemp');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS topic_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS topic_exists
 				BEFORE INSERT ON Topics
 				WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
 				BEGIN
@@ -387,14 +392,14 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS seeders_insert
+            self::query_database('CREATE TRIGGER IF NOT EXISTS seeders_insert
 				AFTER INSERT ON Topics
 				BEGIN
 					INSERT INTO Seeders (id) VALUES (NEW.id);
 				END;
 			');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS seeders_transfer
+            self::query_database('CREATE TRIGGER IF NOT EXISTS seeders_transfer
 				AFTER UPDATE ON Topics
 				WHEN NEW.ds <> OLD.ds
 				BEGIN
@@ -415,7 +420,7 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS topics_delete
+            self::query_database('CREATE TRIGGER IF NOT EXISTS topics_delete
 				AFTER DELETE ON Topics FOR EACH ROW
 				BEGIN
 					DELETE FROM Seeders WHERE id = OLD.id;
@@ -423,10 +428,10 @@ class Db {
 				END;
 			');
 
-			// триггер для обновления данных о подразделах
-			self::query_database( 'DROP TRIGGER IF EXISTS Forums_update' );
+            // триггер для обновления данных о подразделах
+            self::query_database('DROP TRIGGER IF EXISTS Forums_update');
 
-			self::query_database( 'CREATE TRIGGER IF NOT EXISTS forums_exists
+            self::query_database('CREATE TRIGGER IF NOT EXISTS forums_exists
 				BEFORE INSERT ON Forums
 				WHEN EXISTS (SELECT id FROM Forums WHERE id = NEW.id)
 				BEGIN
@@ -439,15 +444,13 @@ class Db {
 				END;
 			');
 
-			self::query_database( 'PRAGMA user_version = 4' );
+            self::query_database('PRAGMA user_version = 4');
 
-		}
-		
-	}
-	
+        }
+
+    }
+
 }
 
 // подключаемся к базе
 Db::create();
-
-?>

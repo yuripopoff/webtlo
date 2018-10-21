@@ -720,12 +720,12 @@ class deluge
                     'message',
                     'progress',
                 ),
-                (object) array()
+                (object) array(),
             ],
             'id' => 9,
         );
         $data = $this->makeRequest($request);
-        if ( empty($data['result']['torrents']) ) {
+        if (empty($data['result']['torrents'])) {
             return false;
         }
         foreach ($data['result']['torrents'] as $hash => $torrent) {
@@ -743,7 +743,7 @@ class deluge
     public function torrentAdd($filename, $savepath = "")
     {
         $localpath = $this->torrentDownload($filename);
-        if ( empty($localpath) ) {
+        if (empty($localpath)) {
             return false;
         }
         $request = array(
@@ -752,9 +752,9 @@ class deluge
                 array(
                     'path' => $localpath,
                     'options' => array(
-                        'download_location' => $savepath
+                        'download_location' => $savepath,
                     ),
-                )
+                ),
             ]],
             'id' => 1,
         );
@@ -768,9 +768,9 @@ class deluge
         $request = array(
             'method' => 'web.download_torrent_from_url',
             'params' => array(
-                $filename
+                $filename,
             ),
-            'id' => 2
+            'id' => 2,
         );
         $data = $this->makeRequest($request);
         return $data['result']; // return localpath
@@ -782,9 +782,9 @@ class deluge
         $request = array(
             'method' => 'core.enable_plugin',
             'params' => array(
-                $name
+                $name,
             ),
-            'id' => 3
+            'id' => 3,
         );
         $data = $this->makeRequest($request);
     }
@@ -796,7 +796,7 @@ class deluge
         $request = array(
             'method' => 'core.get_filter_tree',
             'params' => array(),
-            'id' => 3
+            'id' => 3,
         );
         $filters = $this->makeRequest($request);
         $labels = array_column_common($filters['result']['label'], 0);
@@ -806,9 +806,9 @@ class deluge
         $request = array(
             'method' => 'label.add',
             'params' => array(
-                $label
+                $label,
             ),
-            'id' => 3
+            'id' => 3,
         );
         $data = $this->makeRequest($request);
     }
@@ -827,9 +827,9 @@ class deluge
             $request = array(
                 'method' => 'label.set_torrent',
                 'params' => array(
-                    strtolower($hash), $label
+                    strtolower($hash), $label,
                 ),
-                'id' => 1
+                'id' => 1,
             );
             $data = $this->makeRequest($request);
         }
@@ -841,7 +841,7 @@ class deluge
         $request = array(
             'method' => 'core.resume_all_torrents',
             'params' => array(),
-            'id' => 7
+            'id' => 7,
         );
         $data = $this->makeRequest($request);
     }
@@ -852,9 +852,9 @@ class deluge
         $request = array(
             'method' => 'core.resume_torrent',
             'params' => array(
-                array_map('strtolower', $hash)
+                array_map('strtolower', $hash),
             ),
-            'id' => 7
+            'id' => 7,
         );
         $data = $this->makeRequest($request);
     }
@@ -865,9 +865,9 @@ class deluge
         $request = array(
             'method' => 'core.pause_torrent',
             'params' => array(
-                array_map('strtolower', $hash)
+                array_map('strtolower', $hash),
             ),
-            'id' => 8
+            'id' => 8,
         );
         $data = $this->makeRequest($request);
     }
@@ -880,9 +880,9 @@ class deluge
                 'method' => 'core.remove_torrent',
                 'params' => array(
                     strtolower($hash),
-                    $delete_local_data
+                    $delete_local_data,
                 ),
-                'id' => 6
+                'id' => 6,
             );
             $data = $this->makeRequest($request);
         }
@@ -894,9 +894,9 @@ class deluge
         $request = array(
             'method' => 'core.force_recheck',
             'params' => array(
-                array_map('strtolower', $hash)
+                array_map('strtolower', $hash),
             ),
-            'id' => 5
+            'id' => 5,
         );
         $data = $this->makeRequest($request);
     }
@@ -1018,7 +1018,7 @@ class qbittorrent
         $request = http_build_query(array(
             'urls' => $filename,
             'savepath' => $savepath,
-            'cookie' => $this->sid
+            'cookie' => $this->sid,
         ), '', '&', PHP_QUERY_RFC3986);
         $this->makeRequest($request, 'command/download', false);
     }

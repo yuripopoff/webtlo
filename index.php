@@ -7,29 +7,41 @@ include_once dirname(__FILE__) . '/php/common.php';
 
 // получение настроек
 $cfg = get_settings();
-	
+
 // торрент-клиенты
-if(isset($cfg['clients'])){
-	foreach($cfg['clients'] as $id => $tc){
-		$tcs[] = '<option value="'.$id.'" data="'.implode('|', $tc).'">'.$tc['cm'].'</option>';
-	}
-	$tcs = implode('', $tcs);
-} else $tcs = '';
+$tcs = '';
+if (isset($cfg['clients'])) {
+    $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
+    foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
+        $tcs .= sprintf(
+            $tor_client_option_pattern,
+            $tor_client_id,
+            implode('|', $tor_client_info),
+            $tor_client_info['cm']
+        );
+    }
+}
 
 // подразделы
-if(isset($cfg['subsections'])){
-	foreach($cfg['subsections'] as $id => &$ss){
-		$subsections[] = '<option value="'.$id.'" data="'.implode('|', $ss).'">'.$ss['na'].'</option>';
-	}
-	$subsections = implode('', $subsections);
-} else $subsections = '';
+$subsections = '';
+if (isset($cfg['subsections'])) {
+    $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
+    foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
+        $subsections .= sprintf(
+            $forum_option_pattern,
+            $forum_id,
+            implode('|', $forum_info),
+            $forum_info['na']
+        );
+    }
+}
 
 // чекбоксы
-$savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
-$retracker = ($cfg['retracker'] == 1 ? "checked" : "");
-$proxy_activate_forum = ( $cfg['proxy_activate_forum'] == 1 ? "checked" : "" );
-$proxy_activate_api = ( $cfg['proxy_activate_api'] == 1 ? "checked" : "" );
-$avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
+$savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
+$retracker = $cfg['retracker'] == 1 ? "checked" : "";
+$proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
+$proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
+$avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
@@ -40,7 +52,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.9.3</title>
+		<title>web-TLO-0.9.9.5</title>
 		<script src="jquery/jquery.js"></script>
 		<script src="jquery/jquery-ui.js"></script>
 		<script src="jquery/external/datepicker-ru.js"></script>
@@ -338,7 +350,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Пароль:
 										<input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
 									</label>
-								</div>																			
+								</div>
 								<div>
 									<label>
 										Ключ bt:
@@ -417,8 +429,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									</button>
 									<span id="result-tc"></span>
 								</p>
-								
-								<div class="block-settings">											
+
+								<div class="block-settings">
 									<select id="list-tcs" size=10>
 										<option value=0 data="0" disabled>список торрент-клиентов</option>
 										<?php echo $tcs ?>
@@ -579,7 +591,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 						</div>
 					</form>
-				</div>					
+				</div>
 				<div id="reports" class="content">
 					<select id="reports_list">
 						<optgroup id="reports_list_stored">
@@ -662,6 +674,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<script type="text/javascript" src="js/subsections.js"></script>
 		<script type="text/javascript" src="js/actions.js"></script>
 		<script type="text/javascript" src="js/widgets.js"></script>
-		<script type="text/javascript" src="js/topics.js"></script>		
+		<script type="text/javascript" src="js/topics.js"></script>
 	</body>
 </html>
