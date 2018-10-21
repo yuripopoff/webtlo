@@ -75,7 +75,7 @@ foreach ( $cfg['subsections'] as $forum_id => $subsection ) {
     $topics_count = count( $topics_data['result'] );
     $topics_size = $topics_data['total_size_bytes'];
 
-    Log::append( "Список раздач подраздела № $forum_id получен ($topics_count шт.)" );
+    // Log::append( "Список раздач подраздела № $forum_id получен ($topics_count шт.)" );
 
     // запоминаем время обновления каждого подраздела
     $forums_update_time[ $forum_id ]['ud'] = $topics_data['update_time'];
@@ -236,6 +236,7 @@ $count_renew = Db::query_database(
 );
 
 if ( $count_update[0] > 0 || $count_renew[0] > 0 ) {
+    Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
     Log::append ( "Запись в базу данных сведений о раздачах..." );
     // переносим данные в основную таблицу
     Db::query_database( "INSERT INTO Topics (id,ss,se,st,qt,ds)

@@ -22,7 +22,9 @@ function getFilteredTopics() {
 		complete: block_actions,
 		success: function (response) {
 			var response = $.parseJSON(response);
-			$("#topics_result").text(response.log);
+			if ( response.log.length ) {
+				$("#topics_result").text(response.log);
+			}
 			if (response.topics != null) {
 				$("#topics").html(response.topics);
 				$("#filtered_topics_count").text(response.count);
