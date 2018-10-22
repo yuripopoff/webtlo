@@ -131,23 +131,6 @@ $("#ss-prop").on("focusout", function () {
 		.attr("data", cl + "|" + lb + "|" + fd + "|" + ln + "|" + sub_folder + "|" + hide_topics);
 });
 
-/* получение данных о подразделах */
-function getForumIds(forum_id = "") {
-	var ids = [];
-	$("#list-ss option").each(function () {
-		var value = $(this).val();
-		if (value != 0) {
-			var data = $(this).attr("data");
-			data = data.split('|');
-			if (forum_id !== "" && forum_id == -3 && data[5] == 1) {
-				return true;
-			}
-			ids.push(value);
-		}
-	});
-	return ids;
-}
-
 function getForums() {
 	var forums = {};
 	$("#list-ss option").each(function () {

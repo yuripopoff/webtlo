@@ -4,13 +4,14 @@ try {
 
     include_once dirname(__FILE__) . '/../common.php';
 
-    if (empty($_POST['forum_ids'])) {
+    // получение настроек
+    $cfg = get_settings();
+
+    if (empty($cfg['subsections'])) {
         throw new Exception("Не выбраны хранимые подразделы");
     }
 
-    $forum_ids = $_POST['forum_ids'];
-
-    foreach ($forum_ids as $forum_id) {
+    foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
         $request = "SELECT
                 f.id AS id,

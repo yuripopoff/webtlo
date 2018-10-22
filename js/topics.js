@@ -5,8 +5,6 @@
 function getFilteredTopics() {
 	Cookies.set("filter-options", $("#topics_filter").serializeArray());
 	var forum_id = $("#subsections").val();
-	var forum_ids = getForumIds(forum_id);
-	var config = $("#config").serialize();
 	var filter = $("#topics_filter").serialize();
 	$("#process").text("Получение данных о раздачах...");
 	$.ajax({
@@ -14,12 +12,14 @@ function getFilteredTopics() {
 		url: "php/actions/get_filtered_list_topics.php",
 		data: {
 			forum_id: forum_id,
-			forum_ids: forum_ids,
 			filter: filter,
-			cfg: config
 		},
-		beforeSend: block_actions,
-		complete: block_actions,
+		beforeSend: function () {
+			block_actions();
+		},
+		complete: function () {
+			block_actions();
+		},
 		success: function (response) {
 			var response = $.parseJSON(response);
 			if (response.log.length) {

@@ -57,7 +57,9 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $hs = str_repeat('?,', count($torrents_hashes) - 1) . '?';
             $topics_hashes_query = Db::query_database(
                 "SELECT hs FROM Topics WHERE hs IN ($hs) AND ss IN ($ss)",
-                array_merge($torrents_hashes, $forums_ids), true, PDO::FETCH_COLUMN
+                array_merge($torrents_hashes, $forums_ids),
+                true,
+                PDO::FETCH_COLUMN
             );
             $topics_hashes = array_merge($topics_hashes, $topics_hashes_query);
             unset($topics_hashes_query);

@@ -9,7 +9,11 @@ $(document).ready(function () {
 			context: this,
 			type: "POST",
 			url: "php/actions/set_config.php",
-			data: { cfg: $data, forums: forums, tor_clients: tor_clients },
+			data: {
+				cfg: $data,
+				forums: forums,
+				tor_clients: tor_clients
+			},
 			beforeSend: function () {
 				$(this).prop("disabled", true);
 			},
@@ -43,7 +47,11 @@ $(document).ready(function () {
 			$.ajax({
 				type: "POST",
 				url: "php/actions/check_mirror_access.php",
-				data: { cfg: $data, url: url, url_type: value },
+				data: {
+					cfg: $data,
+					url: url,
+					url_type: value
+				},
 				success: function (response) {
 					$(element).siblings("i").removeAttr("class");
 					var result = result_list[response];
@@ -73,7 +81,9 @@ $(document).ready(function () {
 				$.ajax({
 					type: "POST",
 					url: "php/actions/get_user_details.php",
-					data: { cfg: $data },
+					data: {
+						cfg: $data
+					},
 					success: function (response) {
 						var response = $.parseJSON(response);
 						$("#log").append(response.log);
@@ -113,20 +123,17 @@ $(document).ready(function () {
 
 	// получение статистики
 	$("#get_statistics").on("click", function () {
-		// список подразделов
-		forum_ids = getForumIds();
 		$.ajax({
 			context: this,
 			type: "POST",
 			url: "php/actions/get_statistics.php",
-			data: { forum_ids: forum_ids },
 			beforeSend: function () {
 				$(this).prop("disabled", true);
 			},
 			success: function (response) {
-				json = $.parseJSON(response);
-				$("#table_statistics tbody").html(json.tbody);
-				$("#table_statistics tfoot").html(json.tfoot);
+				response = $.parseJSON(response);
+				$("#table_statistics tbody").html(response.tbody);
+				$("#table_statistics tfoot").html(response.tfoot);
 			},
 			complete: function () {
 				$(this).prop("disabled", false);
@@ -157,7 +164,9 @@ $(document).ready(function () {
 		$.ajax({
 			type: "POST",
 			url: "php/actions/get_log_content.php",
-			data: { log_file: name_new },
+			data: {
+				log_file: name_new
+			},
 			success: function (response) {
 				if (typeof response !== "undefined") {
 					$("#log_" + name_new).html(response);
@@ -189,26 +198,16 @@ $(document).ready(function () {
 
 	// обновление сведений о раздачах
 	$("#update_info").click(function () {
-		// список торрент-клиентов
-		tor_clients = getTorClients();
-		// список подразделов
-		forums = getForums();
-		forum_ids = getForumIds();
-		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "php/actions/update_info.php",
-			data: { cfg: $data, forums: forums, forum_ids: forum_ids, tor_clients: tor_clients },
 			beforeSend: function () {
 				block_actions();
-				$("#process").text("Обновление сведений о раздачах...");
 			},
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				if (response.result.length) {
-					$("#topics_result").text(response.result);
-				}
+				$("#topics_result").text(response.result);
 				getFilteredTopics();
 			},
 			complete: function () {

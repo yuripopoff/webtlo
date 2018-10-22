@@ -34,8 +34,10 @@ function get_settings($filename = "")
     if (!empty($config['subsec'])) {
         $subsections = explode(',', $config['subsec']);
         $titles = Db::query_database(
-            "SELECT id,na FROM Forums WHERE id IN (${config['subsec']})",
-            array(), true, PDO::FETCH_KEY_PAIR
+            'SELECT id,na FROM Forums WHERE id IN (' . $config['subsec'] . ')',
+            array(),
+            true,
+            PDO::FETCH_KEY_PAIR
         );
     }
     if (isset($subsections)) {

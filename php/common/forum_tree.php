@@ -16,7 +16,9 @@ if (!isset($api)) {
 // обновление дерева подразделов
 $forum_tree_update = Db::query_database(
     "SELECT strftime('%s', 'now') - ud FROM UpdateTime WHERE id = ?",
-    array(8888), true, PDO::FETCH_COLUMN
+    array(8888),
+    true,
+    PDO::FETCH_COLUMN
 );
 
 if (
@@ -80,7 +82,10 @@ if (
     }
 
     // создаём временную таблицу
-    Db::query_database('CREATE TEMP TABLE ForumsNew AS SELECT id,na,qt,si FROM Forums WHERE 0 = 1');
+    Db::query_database(
+        'CREATE TEMP TABLE ForumsNew AS
+        SELECT id,na,qt,si FROM Forums WHERE 0 = 1'
+    );
 
     // отправляем в базу данных
     $forums = array_chunk($forums, 500, true);

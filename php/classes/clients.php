@@ -92,7 +92,15 @@ class utorrent
             $status = decbin($torrent[1]);
             // 0 - Started, 2 - Paused, 3 - Error, 4 - Checked, 7 - Loaded, 100% Downloads
             if (!$status{3}) {
-                $status = $status{0} && $status{4} && $torrent[4] == 1000 ? !$status{2} && $status{7} ? 1 : -1 : 0;
+                if (
+                    $status{0}
+                    && $status{4}
+                    && $torrent[4] == 1000
+                ) {
+                    $status = !$status{2} && $status{7} ? 1 : -1;
+                } else {
+                    $status = 0;
+                }
                 $torrents[$torrent[0]] = $status;
             }
         }
@@ -246,7 +254,7 @@ class transmission
             $req = json_decode($req, true);
             if ($req['result'] != 'success') {
                 if (empty($req['result']) && $i <= $n) {
-                    Log::append("Повторная попытка $i/$n выполнить запрос.");
+                    Log::append("Повторная попытка $i/$n выполнить запрос");
                     sleep(10);
                     $i++;
                     continue;
@@ -281,8 +289,11 @@ class transmission
         }
         foreach ($data['arguments']['torrents'] as $torrent) {
             if (empty($torrent['error'])) {
-                // скачано 100%
-                $status = $torrent['percentDone'] == 1 ? $torrent['status'] == 0 ? -1 : 1 : 0;
+                if ($torrent['percentDone'] == 1) {
+                    $status = $torrent['status'] == 0 ? -1 : 1;
+                } else {
+                    $status = 0;
+                }
                 $hash = strtoupper($torrent['hashString']);
                 $torrents[$hash] = $status;
             }
@@ -492,8 +503,11 @@ class vuze
         }
         foreach ($data['arguments']['torrents'] as $torrent) {
             if (empty($torrent['error'])) {
-                // скачано 100%
-                $status = $torrent['percentDone'] == 1 ? $torrent['status'] == 0 ? -1 : 1 : 0;
+                if ($torrent['percentDone'] == 1) {
+                    $status = $torrent['status'] == 0 ? -1 : 1;
+                } else {
+                    $status = 0;
+                }
                 $hash = strtoupper($torrent['hashString']);
                 $torrents[$hash] = $status;
             }
@@ -730,8 +744,11 @@ class deluge
         }
         foreach ($data['result']['torrents'] as $hash => $torrent) {
             if ($torrent['message'] == 'OK') {
-                // скачано 100%
-                $status = $torrent['progress'] == 100 ? $torrent['paused'] ? -1 : 1 : 0;
+                if ($torrent['progress'] == 100) {
+                    $status = $torrent['paused'] ? -1 : 1;
+                } else {
+                    $status = 0;
+                }
                 $hash = strtoupper($hash);
                 $torrents[$hash] = $status;
             }
@@ -932,7 +949,6 @@ class qbittorrent
         if (!$this->getSID()) {
             return false;
         }
-
         if (!$this->version_api()) {
             Log::append('Версия торрент-клиента не поддерживается.');
             return false;
@@ -955,9 +971,12 @@ class qbittorrent
         curl_setopt_array($ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login'),
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => http_build_query(array(
-                'username' => "$this->login", 'password' => "$this->paswd",
-            )),
+            CURLOPT_POSTFIELDS => http_build_query(
+                array(
+                    'username' => "$this->login",
+                    'password' => "$this->paswd",
+                )
+            ),
             CURLOPT_HEADER => true,
         ));
         $output = curl_exec($ch);
@@ -1003,8 +1022,11 @@ class qbittorrent
         $data = $this->makeRequest('', 'query/torrents');
         foreach ($data as $torrent) {
             if ($torrent['state'] != 'error') {
-                // скачано 100%
-                $status = $torrent['progress'] == 1 ? $torrent['state'] == 'pausedUP' ? -1 : 1 : 0;
+                if ($torrent['progress'] == 1) {
+                    $status = $torrent['state'] == 'pausedUP' ? -1 : 1;
+                } else {
+                    $status = 0;
+                }
                 $hash = strtoupper($torrent['hash']);
                 $torrents[$hash] = $status;
             }
@@ -1015,27 +1037,46 @@ class qbittorrent
     // добавить торрент
     public function torrentAdd($filename, $savepath = "")
     {
-        $request = http_build_query(array(
-            'urls' => $filename,
-            'savepath' => $savepath,
-            'cookie' => $this->sid,
-        ), '', '&', PHP_QUERY_RFC3986);
+        $request = http_build_query(
+            array(
+                'urls' => $filename,
+                'savepath' => $savepath,
+                'cookie' => $this->sid,
+            ),
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        );
         $this->makeRequest($request, 'command/download', false);
     }
 
     // установка метки
     public function setLabel($hash, $label = "")
     {
-        $hash = array_map(function ($hash) {return strtolower($hash);}, $hash);
+        $hash = array_map(function ($hash) {
+            return strtolower($hash);
+        }, $hash);
         if ($this->api < 10) {
-            $fields = http_build_query(array(
-                'hashes' => implode('|', $hash), 'label' => $label,
-            ), '', '&', PHP_QUERY_RFC3986);
+            $fields = http_build_query(
+                array(
+                    'hashes' => implode('|', $hash),
+                    'label' => $label,
+                ),
+                '',
+                '&',
+                PHP_QUERY_RFC3986
+            );
             $this->makeRequest($fields, 'command/setLabel', false);
         } else {
-            $fields = http_build_query(array(
-                'hashes' => implode('|', $hash), 'category' => $label,
-            ), '', '&', PHP_QUERY_RFC3986);
+            $fields = http_build_query(
+                array(
+                    'hashes' => implode('|', $hash),
+                    'category' => $label,
+                ),
+                '',
+                '&',
+                PHP_QUERY_RFC3986
+            );
             $this->makeRequest($fields, 'command/setCategory', false);
         }
     }
@@ -1043,14 +1084,22 @@ class qbittorrent
     // запустить все
     public function startAll()
     {
-        $this->makeRequest("", 'command/resumeAll', false);
+        $this->makeRequest(
+            "",
+            'command/resumeAll',
+            false
+        );
     }
 
     // запуск раздач
     public function torrentStart($hash, $force = false)
     {
         foreach ($hash as $hash) {
-            $this->makeRequest('hash=' . strtolower($hash), 'command/resume', false);
+            $this->makeRequest(
+                'hash=' . strtolower($hash),
+                'command/resume',
+                false
+            );
         }
     }
 
@@ -1058,22 +1107,36 @@ class qbittorrent
     public function torrentStop($hash)
     {
         foreach ($hash as $hash) {
-            $this->makeRequest('hash=' . strtolower($hash), 'command/pause', false);
+            $this->makeRequest(
+                'hash=' . strtolower($hash),
+                'command/pause',
+                false
+            );
         }
     }
 
     // удаление раздач
     public function torrentRemove($hash, $data = false)
     {
-        $hash = array_map(function ($hash) {return strtolower($hash);}, $hash);
-        $this->makeRequest('hashes=' . implode('|', $hash), 'command/delete' . ($data ? 'Perm' : ''), false);
+        $hash = array_map(function ($hash) {
+            return strtolower($hash);
+        }, $hash);
+        $this->makeRequest(
+            'hashes=' . implode('|', $hash),
+            'command/delete' . ($data ? 'Perm' : ''),
+            false
+        );
     }
 
     // проверить локальные данные раздач
     public function torrentRecheck($hash)
     {
         foreach ($hash as $hash) {
-            $this->makeRequest('hash=' . strtolower($hash), 'command/recheck', false);
+            $this->makeRequest(
+                'hash=' . strtolower($hash),
+                'command/recheck',
+                false
+            );
         }
     }
 
@@ -1116,9 +1179,12 @@ class ktorrent
         curl_setopt_array($ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login/challenge.xml'),
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => http_build_query(array(
-                'username' => "$this->login", 'password' => "$this->paswd",
-            )),
+            CURLOPT_POSTFIELDS => http_build_query(
+                array(
+                    'username' => "$this->login",
+                    'password' => "$this->paswd",
+                )
+            ),
             CURLOPT_HEADER => true,
         ));
         $output = curl_exec($ch);
@@ -1143,11 +1209,19 @@ class ktorrent
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login?page=interface.html'),
+            CURLOPT_URL => sprintf(
+                self::$base,
+                $this->host, $this->port,
+                'login?page=interface.html'
+            ),
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => http_build_query(array(
-                'username' => "$this->login", 'challenge' => "$this->challenge", 'Login' => 'Sign in',
-            )),
+            CURLOPT_POSTFIELDS => http_build_query(
+                array(
+                    'username' => "$this->login",
+                    'challenge' => "$this->challenge",
+                    'Login' => 'Sign in',
+                )
+            ),
             CURLOPT_HEADER => true,
         ));
         $output = curl_exec($ch);
@@ -1193,7 +1267,12 @@ class ktorrent
     // получение списка раздач
     public function getTorrents($full = false)
     {
-        $data = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
+        $data = $this->makeRequest(
+            'data/torrents.xml',
+            true,
+            array(CURLOPT_POST => false),
+            true
+        );
         // вывод отличается, если в клиенте только одна раздача
         if ($full) {
             return $data;
@@ -1201,8 +1280,11 @@ class ktorrent
 
         foreach ($data['torrent'] as $torrent) {
             if ($torrent['status'] != 'Ошибка') {
-                // скачано 100%
-                $status = $torrent['percentage'] == 100 ? $torrent['status'] == 'Пауза' ? -1 : 1 : 0;
+                if ($torrent['percentage'] == 100) {
+                    $status = $torrent['status'] == 'Пауза' ? -1 : 1;
+                } else {
+                    $status = 0;
+                }
                 $hash = strtoupper($torrent['info_hash']);
                 $torrents[$hash] = $status;
             }
@@ -1335,14 +1417,26 @@ class rtorrent
     // получение списка раздач
     public function getTorrents()
     {
-        $res = $this->makeRequest("d.multicall", array("main", "d.get_hash=", "d.get_state=", "d.get_complete="));
+        $res = $this->makeRequest(
+            "d.multicall",
+            array(
+                "main",
+                "d.get_hash=",
+                "d.get_state=",
+                "d.get_complete=",
+            )
+        );
         // ответ в формате array(HASH, STATE active/stopped, COMPLETED)
         foreach ($res as $torrent) {
             // $status:
             //        0 - Не скачано
             //        1 - Скачано и активно
             //        -1 - Скачано и остановлено
-            $status = $torrent[2] ? $torrent[1] ? 1 : -1 : 0;
+            if ($torrent[2]) {
+                $status = $torrent[1] ? 1 : -1;
+            } else {
+                $status = 0;
+            }
             $torrents[$torrent[0]] = $status;
         }
         return isset($torrents) ? $torrents : array();
@@ -1351,7 +1445,7 @@ class rtorrent
     // добавить торрент
     public function torrentAdd($topics, $savepath = "", $label = "")
     {
-        $data = $this->makeRequest("load_start", $filename); // === false
+        $result = $this->makeRequest("load_start", $filename); // === false
     }
 
     // установка метки
@@ -1360,7 +1454,11 @@ class rtorrent
         $result_ok = 0;
         $result_fail = 0;
         foreach ($hashes as $hash) {
-            $this->makeRequest("d.set_custom1", array($hash, $label)) === false ? $result_fail += 1 : $result_ok += 1;
+            $result = $this->makeRequest(
+                "d.set_custom1",
+                array($hash, $label)
+            );
+            $result === false ? $result_fail += 1 : $result_ok += 1;
         }
         Log::append('Установлено меток успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
@@ -1371,7 +1469,8 @@ class rtorrent
         $result_ok = 0;
         $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.start", $hash) === false ? $result_fail += 1 : $result_ok += 1;
+            $result = $this->makeRequest("d.start", $hash);
+            $result === false ? $result_fail += 1 : $result_ok += 1;
         }
         Log::append('Запущено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
@@ -1382,7 +1481,8 @@ class rtorrent
         $result_ok = 0;
         $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.pause", $hash) === false ? $result_fail += 1 : $result_ok += 1;
+            $result = $this->makeRequest("d.pause", $hash);
+            $result === false ? $result_fail += 1 : $result_ok += 1;
         }
         Log::append('Приостановлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
@@ -1393,7 +1493,8 @@ class rtorrent
         $result_ok = 0;
         $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.check_hash", $hash) === false ? $result_fail += 1 : $result_ok += 1;
+            $result = $this->makeRequest("d.check_hash", $hash);
+            $result === false ? $result_fail += 1 : $result_ok += 1;
         }
         Log::append('Проверка файлов запущена успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
@@ -1404,7 +1505,8 @@ class rtorrent
         $result_ok = 0;
         $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.stop", $hash) === false ? $result_fail += 1 : $result_ok += 1;
+            $result = $this->makeRequest("d.stop", $hash);
+            $result === false ? $result_fail += 1 : $result_ok += 1;
         }
         Log::append('Остановлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
