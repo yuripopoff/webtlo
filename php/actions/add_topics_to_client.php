@@ -243,7 +243,12 @@ try {
 
         if (!empty($forum['lb'])) {
             // вытаскиваем хэши добавленных раздач
-            $topics_hashes = Db::query_database("SELECT hs FROM temp.Hashes");
+            $topics_hashes = Db::query_database(
+                "SELECT hs FROM temp.Hashes",
+                array(),
+                true,
+                PDO::FETCH_COLUMN
+            );
             // ждём добавления раздач, чтобы проставить метку
             sleep(round(count($topics_hashes) / 3) + 1); // < 3 дольше ожидание
             // устанавливаем метку
