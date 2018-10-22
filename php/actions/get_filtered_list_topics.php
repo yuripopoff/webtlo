@@ -172,7 +172,15 @@ try {
         }
 
         // хранимые подразделы
-        $forums_ids = $forum_id > 0 ? array($forum_id) : array_keys($cfg['subsections']);
+        if ($forum_id > 0) {
+            $forums_ids = array($forum_id);
+        } else {
+            foreach ($cfg['subsections'] as $forum_id => $subsection) {
+                if (!$subsection['hide_topics']) {
+                    $forums_ids[] = $forum_id;
+                }
+            }
+        }
 
         $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
         $st = str_repeat('?,', count($filter_tracker_status) - 1) . '?';
@@ -181,6 +189,7 @@ try {
         // 1 - fields, 2 - left join, 3 - where
         $pattern_statement = "SELECT Topics.id,na,si,rg%s FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
+			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
 			WHERE ss IN ($ss) AND st IN ($st) AND ($dl) AND Blacklist.id IS NULL%s";
 
@@ -213,23 +222,22 @@ try {
             $fields[] = 'se';
         }
 
-        if (isset($is_keepers) || isset($not_keepers)) {
-            $left_join[] = 'LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id';
-            $where[] = !isset($not_keepers)
-            ? isset($is_keepers)
-            ? 'AND Keepers.id IS NOT NULL'
-            : ''
-            : 'AND Keepers.id IS NULL';
-            // данные о других хранителях
-            $keepers = Db::query_database(
-                "SELECT id,nick FROM Keepers WHERE id IN (
-					SELECT id FROM Topics WHERE ss IN ($ss)
-				)",
-                $forums_ids,
-                true,
-                PDO::FETCH_COLUMN | PDO::FETCH_GROUP
-            );
+        // есть/нет хранители
+        if (isset($not_keepers)) {
+            $where[] = 'AND Keepers.id IS NULL';
+        } elseif (isset($is_keepers)) {
+            $where[] = 'AND Keepers.id IS NOT NULL';
         }
+
+        // данные о других хранителях
+        $keepers = Db::query_database(
+            "SELECT id,nick FROM Keepers WHERE id IN (
+                SELECT id FROM Topics WHERE ss IN ($ss)
+            )",
+            $forums_ids,
+            true,
+            PDO::FETCH_COLUMN | PDO::FETCH_GROUP
+        );
 
         $statement = sprintf(
             $pattern_statement,
@@ -285,7 +293,10 @@ try {
                 continue;
             }
             // хранители на раздаче
-            $keepers_list = isset($keepers[$topic_data['id']]) ? '~> ' . implode(', ', $keepers[$topic_data['id']]) : '';
+            $keepers_list = '';
+            if (isset($keepers[$topic_data['id']])) {
+                $keepers_list = '~> ' . implode(', ', $keepers[$topic_data['id']]);
+            }
             // фильтрация по фразе
             if (!empty($filter_phrase)) {
                 if (empty($filter_by_phrase)) {
@@ -307,13 +318,14 @@ try {
                 }
             }
             // цвет пульки
-            $bullet = isset($cfg['avg_seeders'])
-            ? $topic_data['ds'] < $avg_seeders_period
-            ? $topic_data['ds'] >= $avg_seeders_period / 2
-            ? 'text-warning'
-            : 'text-danger'
-            : 'text-success'
-            : '';
+            $bullet = '';
+            if (isset($cfg['avg_seeders'])) {
+                if ($topic_data['ds'] < $avg_seeders_period) {
+                    $bullet = $topic_data['ds'] >= $avg_seeders_period / 2 ? 'text-warning' : 'text-danger';
+                } else {
+                    $bullet = 'text-success';
+                }
+            }
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(

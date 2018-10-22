@@ -22,7 +22,7 @@ function getFilteredTopics() {
 		complete: block_actions,
 		success: function (response) {
 			var response = $.parseJSON(response);
-			if ( response.log.length ) {
+			if (response.log.length) {
 				$("#topics_result").text(response.log);
 			}
 			if (response.topics != null) {
@@ -298,7 +298,7 @@ $("#topics").on("click", ".topic", function (event) {
 /* фильтр раздач */
 
 // вкл/выкл интервал сидов
-$("input[name=filter_interval]").on("click", function () {
+$("input[name=filter_interval]").on("change", function () {
 	$(".filter_rule_interval").toggle(500);
 	$(".filter_rule_one").toggle(500);
 });
@@ -325,12 +325,14 @@ $(document).ready(function () {
 			$("#topics_filter input[name='" + option.name + "']").each(function () {
 				if ($(this).val() === option.value) {
 					if ($(this).attr("type") === "checkbox" || $(this).attr("type") === "radio") {
-						$(this).prop("checked", true);
+						$(this).prop("checked", true).change();
 					}
 					$(this).val(option.value);
 				}
 			});
 		});
+	} else {
+		getFilteredTopics();
 	}
 });
 
@@ -378,5 +380,3 @@ $(".topics_filter .keepers").on("change", function () {
 		}
 	}
 });
-
-$(window).on("load", getFilteredTopics);
