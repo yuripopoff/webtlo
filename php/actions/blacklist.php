@@ -19,11 +19,17 @@ try {
         switch ($value) {
             case 0:
                 $in = str_repeat('?,', count($topics_ids) - 1) . '?';
-                Db::query_database("DELETE FROM Blacklist WHERE id IN ($in)", $topics_ids);
+                Db::query_database(
+                    "DELETE FROM Blacklist WHERE id IN ($in)",
+                    $topics_ids
+                );
                 break;
             case 1:
                 $select = str_repeat('SELECT ? UNION ALL ', count($topics_ids) - 1) . ' SELECT ?';
-                Db::query_database("INSERT INTO Blacklist (id) $select", $topics_ids);
+                Db::query_database(
+                    "INSERT INTO Blacklist (id) $select",
+                    $topics_ids
+                );
                 break;
             default:
                 throw new Exception("Error: Неизвестное событие");

@@ -19,7 +19,10 @@ $forum_tree_update = Db::query_database(
     array(8888), true, PDO::FETCH_COLUMN
 );
 
-if (empty($forum_tree_update) || $forum_tree_update[0] > 3600) {
+if (
+    empty($forum_tree_update)
+    || $forum_tree_update[0] > 3600
+) {
 
     // получение дерева подразделов
     $forum_tree = $api->get_cat_forum_tree();

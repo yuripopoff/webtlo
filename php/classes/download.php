@@ -34,19 +34,24 @@ class Download
     public function get_torrent_file($topic_id, $add_retracker = 0)
     {
         curl_setopt_array($this->ch, array(
-            CURLOPT_POSTFIELDS => http_build_query(array(
-                'keeper_user_id' => $this->user_id,
-                'keeper_api_key' => $this->api_key,
-                't' => $topic_id,
-                'add_retracker_url' => $add_retracker,
-            )),
+            CURLOPT_POSTFIELDS => http_build_query(
+                array(
+                    'keeper_user_id' => $this->user_id,
+                    'keeper_api_key' => $this->api_key,
+                    't' => $topic_id,
+                    'add_retracker_url' => $add_retracker,
+                )
+            ),
         ));
         $n = 1; // номер попытки
         $try_number = 1; // номер попытки
         $try = 3; // кол-во попыток
         while (true) {
             // выходим после 3-х попыток
-            if ($n > $try || $try_number > $try) {
+            if (
+                $n > $try
+                || $try_number > $try
+            ) {
                 Log::append("Не удалось скачать торрент-файл для $topic_id");
                 return false;
             }
@@ -56,7 +61,10 @@ class Download
             if ($data === false) {
                 $http_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
                 Log::append('CURL ошибка: ' . curl_error($this->ch) . " (раздача $topic_id) [$http_code]");
-                if ($http_code < 300 && $try_number <= $try) {
+                if (
+                    $http_code < 300
+                    && $try_number <= $try
+                ) {
                     Log::append("Повторная попытка $try_number/$try получить данные");
                     sleep(5);
                     $try_number++;

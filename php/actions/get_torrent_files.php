@@ -40,21 +40,28 @@ try {
     $forum_id = isset($_POST['forum_id']) ? $_POST['forum_id'] : 0;
     parse_str($_POST['topics_ids']);
 
-    // дополнительный слэш в конце каталога
-    if (!empty($savedir) && !in_array(substr($savedir, -1), array('\\', '/'))) {
-        $savedir .= strpos($savedir, '/') === false ? '\\' : '/';
-    }
-
-    // подготовка каталогов
-    $torrent_files_path = empty($replace_passkey)
-    ? !empty($savedir) && isset($savesubdir)
-    ? $savedir . 'tfiles_' . $forum_id . '_' . date("d.m.Y_H.i.s") . '_' . $rule_topics . substr($savedir, -1)
-    : $savedir
-    : $dir_torrents;
+    // выбор каталога
+    $torrent_files_path = empty($replace_passkey) ? $savedir : $dir_torrents;
 
     if (empty($torrent_files_path)) {
         $result = "В настройках не указан каталог для скачивания торрент-файлов";
         throw new Exception();
+    }
+
+    // дополнительный слэш в конце каталога
+    if (
+        !empty($torrent_files_path)
+        && !in_array(substr($torrent_files_path, -1), array('\\', '/'))
+    ) {
+        $torrent_files_path .= strpos($torrent_files_path, '/') === false ? '\\' : '/';
+    }
+
+    // создание подкаталога
+    if (
+        empty($replace_passkey)
+        && isset($savesubdir)
+    ) {
+        $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
     }
 
     // создание каталогов
@@ -68,12 +75,22 @@ try {
     $activate_api = isset($proxy_activate_api) ? 1 : 0;
     $proxy_address = "$proxy_hostname:$proxy_port";
     $proxy_auth = "$proxy_login:$proxy_paswd";
-    Proxy::options($activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth);
+    Proxy::options(
+        $activate_forum,
+        $activate_api,
+        $proxy_type,
+        $proxy_address,
+        $proxy_auth
+    );
 
     // шаблон для сохранения
     $torrent_files_path_pattern = "$torrent_files_path/[webtlo].t%s.torrent";
     if (PHP_OS == 'WINNT') {
-        $torrent_files_path_pattern = mb_convert_encoding($torrent_files_path_pattern, 'Windows-1251', 'UTF-8');
+        $torrent_files_path_pattern = mb_convert_encoding(
+            $torrent_files_path_pattern,
+            'Windows-1251',
+            'UTF-8'
+        );
     }
 
     Log::append($replace_passkey

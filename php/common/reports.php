@@ -43,7 +43,9 @@ $sumdlsi = 0;
 // update_time[0] время последнего обновления сведений
 $update_time = Db::query_database(
     "SELECT ud FROM UpdateTime WHERE id = 7777",
-    array(), true, PDO::FETCH_COLUMN
+    array(),
+    true,
+    PDO::FETCH_COLUMN
 );
 
 foreach ($cfg['subsections'] as $forum_id => $subsection) {
@@ -58,7 +60,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // получение данных о подразделе
     $forum = Db::query_database(
         "SELECT * FROM Forums WHERE id = ?",
-        array($forum_id), true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+        array($forum_id),
+        true,
+        PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
     );
 
     if (empty($forum)) {
@@ -71,7 +75,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         "SELECT Topics.id,ss,na,si,st FROM Topics
 		LEFT JOIN Clients ON Topics.hs = Clients.hs
 		WHERE ss = ? AND dl = 1",
-        array($forum_id), true
+        array($forum_id),
+        true
     );
 
     if (empty($topics)) {
@@ -106,7 +111,10 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $tmp['dlqt']++;
         $current_length = $tmp['lgth'] + $lgth;
         $available_length = $message_length_max - $spoiler_length - ($tmp['dlqt'] - $tmp['start'] + 1) * 3;
-        if ($current_length > $available_length || $tmp['dlqt'] == $topics_count) {
+        if (
+            $current_length > $available_length
+            || $tmp['dlqt'] == $topics_count
+        ) {
             $tmp['str'] = implode('[*]', $tmp['str']);
             $tmp['msg'][] = sprintf(
                 $pattern_spoiler,
@@ -134,7 +142,11 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $tmp['msg'][0];
 
     if (!isset($reports)) {
-        $reports = new Reports($cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+        $reports = new Reports(
+            $cfg['forum_url'],
+            $cfg['tracker_login'],
+            $cfg['tracker_paswd']
+        );
     }
 
     // ищем тему со списками
@@ -169,13 +181,18 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             continue;
         }
         // считаем сообщения других хранителей в подразделе
-        if (!empty($keeper['topics']) && $cfg['tracker_login'] == $author_nickname) {
+        if (
+            !empty($keeper['topics'])
+            && $cfg['tracker_login'] == $author_nickname
+        ) {
             $topics_ids = array_chunk($keeper['topics'], 500);
             foreach ($topics_ids as $topics_ids) {
                 $in = str_repeat('?,', count($topics_ids) - 1) . '?';
                 $values = Db::query_database(
                     "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
-                    $topics_ids, true, PDO::FETCH_NUM
+                    $topics_ids,
+                    true,
+                    PDO::FETCH_NUM
                 );
                 if (!isset($stored[$keeper['nickname']])) {
                     $stored[$keeper['nickname']]['dlqt'] = 0;

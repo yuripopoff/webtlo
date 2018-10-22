@@ -8,7 +8,10 @@ try {
         $forum_id = $_POST['forum_id'];
     }
 
-    if (!isset($forum_id) || !is_numeric($forum_id)) {
+    if (
+        !isset($forum_id)
+        || !is_numeric($forum_id)
+    ) {
         throw new Exception("Некорректный идентификатор подраздела: $forum_id");
     }
 
@@ -54,7 +57,8 @@ try {
         // сторонние раздачи
         $topics = Db::query_database(
             "SELECT id,na,si,rg,ss,se FROM TopicsUntracked",
-            array(), true
+            array(),
+            true
         );
         // сортировка раздач
         $topics = natsort_field($topics, $filter_sort, $filter_sort_direction);
@@ -91,7 +95,8 @@ try {
             "SELECT Topics.id,na,si,rg,comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
 			WHERE Blacklist.id IS NOT NULL",
-            array(), true
+            array(),
+            true
         );
         // сортировка раздач
         $topics = natsort_field($topics, $filter_sort, $filter_sort_direction);
@@ -135,10 +140,16 @@ try {
 
         // некорретный ввод значения сидов
         if (isset($filter_interval)) {
-            if (!is_numeric($filter_rule_interval['from']) || !is_numeric($filter_rule_interval['to'])) {
+            if (
+                !is_numeric($filter_rule_interval['from'])
+                || !is_numeric($filter_rule_interval['to'])
+            ) {
                 throw new Exception("В фильтре введено некорректное значение сидов");
             }
-            if ($filter_rule_interval['from'] < 0 || $filter_rule_interval['to'] < 0) {
+            if (
+                $filter_rule_interval['from'] < 0
+                || $filter_rule_interval['to'] < 0
+            ) {
                 throw new Exception("Значение сидов в фильтре должно быть больше 0");
             }
             if ($filter_rule_interval['from'] > $filter_rule_interval['to']) {
@@ -183,11 +194,8 @@ try {
                 throw new Exception("В фильтре введено некорректное значение для периода средних сидов");
             }
             // жёсткое ограничение на 30 дней для средних сидов
-            $avg_seeders_period = $avg_seeders_period > 0
-            ? $avg_seeders_period > 30
-            ? 30
-            : $avg_seeders_period
-            : 1;
+            $avg_seeders_period = $avg_seeders_period > 0 ? $avg_seeders_period : 1;
+            $avg_seeders_period = $avg_seeders_period <= 30 ? $avg_seeders_period : 30;
             for ($i = 0; $i < $avg_seeders_period; $i++) {
                 $avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
                 $avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
@@ -213,10 +221,13 @@ try {
             : ''
             : 'AND Keepers.id IS NULL';
             // данные о других хранителях
-            $keepers = Db::query_database("SELECT id,nick FROM Keepers WHERE id IN (
+            $keepers = Db::query_database(
+                "SELECT id,nick FROM Keepers WHERE id IN (
 					SELECT id FROM Topics WHERE ss IN ($ss)
 				)",
-                $forums_ids, true, PDO::FETCH_COLUMN | PDO::FETCH_GROUP
+                $forums_ids,
+                true,
+                PDO::FETCH_COLUMN | PDO::FETCH_GROUP
             );
         }
 
@@ -248,7 +259,10 @@ try {
             }
             // фильтрация по количеству сидов
             if (isset($filter_interval)) {
-                if ($filter_rule_interval['from'] > $topic_data['se'] || $filter_rule_interval['to'] < $topic_data['se']) {
+                if (
+                    $filter_rule_interval['from'] > $topic_data['se']
+                    || $filter_rule_interval['to'] < $topic_data['se']
+                ) {
                     continue;
                 }
             } else {
@@ -263,7 +277,11 @@ try {
                 }
             }
             // фильтрация по статусу "зелёные"
-            if (isset($topic_data['ds']) && isset($avg_seeders_complete) && $topic_data['ds'] < $avg_seeders_period) {
+            if (
+                isset($topic_data['ds'])
+                && isset($avg_seeders_complete)
+                && $topic_data['ds'] < $avg_seeders_period
+            ) {
                 continue;
             }
             // хранители на раздаче
@@ -323,10 +341,12 @@ try {
     ));
 
 } catch (Exception $e) {
+
     echo json_encode(array(
         'log' => $e->getMessage(),
         'topics' => null,
         'size' => 0,
         'count' => 0,
     ));
+
 }

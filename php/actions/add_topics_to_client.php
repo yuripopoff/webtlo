@@ -56,7 +56,9 @@ try {
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
         $forums_topics_ids += Db::query_database(
             "SELECT ss,id FROM Topics WHERE id IN ($in)",
-            $topics_ids, true, PDO::FETCH_GROUP | PDO::FETCH_COLUMN
+            $topics_ids,
+            true,
+            PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         unset($in);
     }
@@ -85,7 +87,7 @@ try {
 
     // создаём каталог для торрент-файлов
     if (!mkdir_recursive($torrent_files_path)) {
-        $result = "Не удалось создать каталог \"$torrent_files_path\": неверно указан путь или недостаточно прав";
+        $result = 'Не удалось создать каталог "' . $torrent_files_path . '": неверно указан путь или недостаточно прав';
         throw new Exception();
     }
 
@@ -164,8 +166,11 @@ try {
 
         // подключаемся к торрент-клиенту
         $client = new $tor_client['cl'](
-            $tor_client['ht'], $tor_client['pt'], $tor_client['lg'],
-            $tor_client['pw'], $tor_client['cm']
+            $tor_client['ht'],
+            $tor_client['pt'],
+            $tor_client['lg'],
+            $tor_client['pw'],
+            $tor_client['cm']
         );
 
         // проверяем доступность торрент-клиента
@@ -211,8 +216,9 @@ try {
         $count_added = count($torrent_files_added);
 
         // создаём временную таблицу
-        Db::query_database("CREATE TEMP TABLE Hashes AS
-			SELECT hs FROM Clients WHERE 0 = 1"
+        Db::query_database(
+            "CREATE TEMP TABLE Hashes AS
+            SELECT hs FROM Clients WHERE 0 = 1"
         );
 
         // узнаём хэши раздач
@@ -221,7 +227,7 @@ try {
             $in = str_repeat('?,', count($torrent_files_added) - 1) . '?';
             Db::query_database(
                 "INSERT INTO temp.Hashes
-					SELECT hs FROM Topics WHERE id IN ($in)",
+                SELECT hs FROM Topics WHERE id IN ($in)",
                 $torrent_files_added
             );
             unset($in);
@@ -231,7 +237,7 @@ try {
         // помечаем в базе добавленные раздачи
         Db::query_database(
             "INSERT INTO Clients (hs,cl,dl)
-				SELECT hs,?,? FROM temp.Hashes",
+            SELECT hs,?,? FROM temp.Hashes",
             array($tor_client_id, 0)
         );
 

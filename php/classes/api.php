@@ -52,7 +52,10 @@ class Api
             $json = curl_exec($this->ch);
             if ($json === false) {
                 $http_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-                if ($http_code < 300 && $try_number <= $try) {
+                if (
+                    $http_code < 300
+                    && $try_number <= $try
+                ) {
                     Log::append("Повторная попытка $try_number/$try получить данные");
                     sleep(5);
                     $try_number++;
@@ -62,7 +65,10 @@ class Api
             }
             $data = json_decode($json, true);
             if (isset($data['error'])) {
-                if ($data['error']['code'] == '503' && $n <= $try) {
+                if (
+                    $data['error']['code'] == '503'
+                    && $n <= $try
+                ) {
                     Log::append("Повторная попытка $n/$try получить данные");
                     sleep(20);
                     $n++;
@@ -133,7 +139,7 @@ class Api
         return $data;
     }
 
-    // Количество пиров по ID/HASH темы
+    // Количество пиров по ID или HASH
     public function get_peer_stats($ids, $by = 'topic_id')
     {
         if (empty($ids)) {
@@ -207,50 +213,6 @@ class Api
             }
         }
         return $topics;
-    }
-
-    // список раздач раздела
-    public function get_subsection_data($forum_ids, $get = 'ids')
-    {
-        //~ Log::append ( 'Получение списка раздач...' );
-        $ids = array();
-        $status = array(0, 2, 3, 8, 10);
-        foreach ($forum_ids as $forum_id) {
-            $url = $this->api_url . '/v1/static/pvc/f/' . $forum_id . '?api_key=' . $this->api_key;
-            $data = $this->request_exec($url);
-            $q = 0;
-            if (empty($data['result'])) {
-                continue;
-            }
-
-            foreach ($data['result'] as $id => $val) {
-                // только раздачи с выбранными статусами
-                if (!empty($val) && in_array($val[0], $status)) {
-                    if (count($val) < 3) {
-                        throw new Exception("Error: Недостаточно элементов в ответе.");
-                    }
-
-                    switch ($get) {
-                        case 'ids':
-                            $ids[] = $id;
-                            break;
-                        case 'status':
-                            $ids[$id] = $val[0];
-                            break;
-                        case 'seeders':
-                            $ids[$id] = $val[1];
-                            break;
-                        case 'all':
-                            $ids[$id] = implode(',', $val) . ",$forum_id";
-                            break;
-                    }
-                    $q++;
-                }
-            }
-            Db::query_database("UPDATE Forums SET qt = $q, si = ${data['total_size_bytes']} WHERE id = $forum_id");
-            Log::append('Список раздач раздела № ' . $forum_id . ' получен (' . $q . ' шт.).');
-        }
-        return $ids;
     }
 
     public function __destruct()

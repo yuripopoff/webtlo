@@ -21,7 +21,10 @@ try {
 
     // торрент-клиенты
     $q = 0;
-    if (isset($tor_clients) && is_array($tor_clients)) {
+    if (
+        isset($tor_clients)
+        && is_array($tor_clients)
+    ) {
         foreach ($tor_clients as $id => $tor_client) {
             $q++;
             $ini->write("torrent-client-$q", 'id', $id);
@@ -48,7 +51,10 @@ try {
     $ini->write('other', 'qt', $q); // кол-во торрент-клиентов
 
     // регулировка раздач
-    if (isset($peers) && is_numeric($peers)) {
+    if (
+        isset($peers)
+        && is_numeric($peers)
+    ) {
         $ini->write('topics_control', 'peers', $peers);
     }
     $ini->write('topics_control', 'leechers', isset($leechers) ? 1 : 0);
@@ -74,7 +80,10 @@ try {
     }
 
     // подразделы
-    if (isset($forums) && is_array($forums)) {
+    if (
+        isset($forums)
+        && is_array($forums)
+    ) {
         foreach ($forums as $forum) {
             if (isset($forum['na'])) {
                 $ini->write($forum['id'], 'title', $forum['na']);
@@ -141,13 +150,22 @@ try {
     $ini->write('download', 'retracker', isset($retracker) ? 1 : 0);
 
     // фильтрация раздач
-    if (isset($rule_topics) && is_numeric($rule_topics)) {
+    if (
+        isset($rule_topics)
+        && is_numeric($rule_topics)
+    ) {
         $ini->write('sections', 'rule_topics', $rule_topics);
     }
-    if (isset($rule_date_release) && is_numeric($rule_date_release)) {
+    if (
+        isset($rule_date_release)
+        && is_numeric($rule_date_release)
+    ) {
         $ini->write('sections', 'rule_date_release', $rule_date_release);
     }
-    if (isset($avg_seeders_period) && is_numeric($avg_seeders_period)) {
+    if (
+        isset($avg_seeders_period)
+        && is_numeric($avg_seeders_period)
+    ) {
         $ini->write('sections', 'avg_seeders_period', $avg_seeders_period);
     }
     $ini->write('sections', 'avg_seeders', isset($avg_seeders) ? 1 : 0);
@@ -158,6 +176,8 @@ try {
     echo Log::get();
 
 } catch (Exception $e) {
+
     Log::append($e->getMessage());
     echo Log::get();
+
 }

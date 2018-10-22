@@ -26,8 +26,11 @@ $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
 foreach ($cfg['clients'] as $client_id => $client_info) {
 
     $client = new $client_info['cl'](
-        $client_info['ht'], $client_info['pt'], $client_info['lg'],
-        $client_info['pw'], $client_info['cm']
+        $client_info['ht'],
+        $client_info['pt'],
+        $client_info['lg'],
+        $client_info['pw'],
+        $client_info['cm']
     );
 
     if ($client->is_online()) {
@@ -86,10 +89,25 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             // находим значение пиров
             $peers = $topic_data['seeders'] + $leechers;
             // учитываем вновь прибывшего "лишнего" сида
-            $peers += $topic_data['seeders'] && $peers == $cfg['topics_control']['peers'] && $tor_client_status == 1 ? 1 : 0;
+            if (
+                $topic_data['seeders']
+                && $peers == $cfg['topics_control']['peers']
+                && $tor_client_status == 1
+            ) {
+                $peers = 1;
+            } else {
+                $peers = 0;
+            }
 
             // стопим только, если есть сиды
-            if (($peers > $cfg['topics_control']['peers'] || !$cfg['topics_control']['no_leechers'] && !$topic_data['leechers']) && $topic_data['seeders']) {
+            if (
+                $topic_data['seeders']
+                && (
+                    $peers > $cfg['topics_control']['peers']
+                    || !$cfg['topics_control']['no_leechers']
+                    && !$topic_data['leechers']
+                )
+            ) {
                 if ($tor_client_status == 1) {
                     $control_hashes['stop'][] = $hash_info;
                 }
@@ -113,7 +131,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             foreach ($control_hashes['start'] as $start) {
                 $client->torrentStart($start);
             }
-            Log::append('Запрос на запуск раздач торрент-клиенту "' . $client_info['cm'] . "\" отправлен ($count_start)");
+            Log::append('Запрос на запуск раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_start . ')');
         }
 
         // останавливаем

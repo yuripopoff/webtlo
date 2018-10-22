@@ -1,13 +1,16 @@
 <?php
 
-include_once dirname(__FILE__) . '/../common.php';
-include_once dirname(__FILE__) . '/../classes/user_details.php';
-
 try {
+
+    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../classes/user_details.php';
 
     parse_str($_POST['cfg']);
 
-    if (empty($tracker_username) || empty($tracker_password)) {
+    if (
+        empty($tracker_username)
+        || empty($tracker_password)
+    ) {
         throw new Exception();
     }
 
@@ -16,7 +19,13 @@ try {
     $activate_api = isset($proxy_activate_api) ? 1 : 0;
     $proxy_address = "$proxy_hostname:$proxy_port";
     $proxy_auth = "$proxy_login:$proxy_paswd";
-    Proxy::options($activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth);
+    Proxy::options(
+        $activate_forum,
+        $activate_api,
+        $proxy_type,
+        $proxy_address,
+        $proxy_auth
+    );
 
     UserDetails::get_details($forum_url, $tracker_username, $tracker_password);
 
@@ -30,6 +39,7 @@ try {
     );
 
 } catch (Exception $e) {
+
     Log::append($e->getMessage());
     echo json_encode(
         array(
@@ -39,4 +49,5 @@ try {
             'log' => Log::get(),
         )
     );
+
 }

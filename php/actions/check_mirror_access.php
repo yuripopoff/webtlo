@@ -52,7 +52,13 @@ $try_number = 1;
 while (true) {
     $data = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if (($data === false || $http_code != 200) && $try_number <= 3) {
+    if (
+        $try_number <= 3
+        && (
+            $data === false
+            || $http_code != 200
+        )
+    ) {
         $try_number++;
         sleep(1);
         continue;

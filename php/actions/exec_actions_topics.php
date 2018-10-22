@@ -128,9 +128,11 @@ try {
     ));
 
 } catch (Exception $e) {
+
     Log::append($e->getMessage());
     echo json_encode(array(
         'log' => Log::get(),
         'result' => $result,
     ));
+
 }

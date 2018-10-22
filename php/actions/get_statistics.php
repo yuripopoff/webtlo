@@ -1,8 +1,8 @@
 <?php
 
-include_once dirname(__FILE__) . '/../common.php';
-
 try {
+
+    include_once dirname(__FILE__) . '/../common.php';
 
     if (empty($_POST['forum_ids'])) {
         throw new Exception("Не выбраны хранимые подразделы");
@@ -12,37 +12,39 @@ try {
 
     foreach ($forum_ids as $forum_id) {
 
+        $request = "SELECT
+                f.id AS id,
+                f.na AS na,
+                COUNT(CASE WHEN seeds.se = 0 THEN 1 ELSE NULL END) AS Count0,
+                SUM(CASE WHEN seeds.se = 0 THEN seeds.si ELSE 0 END) AS Size0,
+                COUNT(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN 1 ELSE NULL END) AS Count5,
+                SUM(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN seeds.si ELSE 0 END) AS Size5,
+                COUNT(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN 1 ELSE NULL END) AS Count10,
+                SUM(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN seeds.si ELSE 0 END) AS Size10,
+                COUNT(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN 1 ELSE NULL END) AS Count15,
+                SUM(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN seeds.si ELSE 0 END) AS Size15,
+                f.qt AS qt,
+                f.si AS si
+            FROM (
+                SELECT
+                    t.id,
+                    t.si,
+                    t.st,
+                    t.ss,
+                    (CAST((IFNULL(t.se, 0)+IFNULL(s.d0 , 0)+IFNULL(s.d1 , 0)+IFNULL(s.d2 , 0)+IFNULL(s.d3 , 0)+IFNULL(s.d4 , 0)+IFNULL(s.d5 , 0)+IFNULL(s.d6 , 0)+IFNULL(s.d7 , 0)+IFNULL(s.d8 , 0)+IFNULL(s.d9 , 0)+
+                    IFNULL(s.d10, 0)+IFNULL(s.d11, 0)+IFNULL(s.d12, 0)+IFNULL(s.d13, 0)) as FLOAT)) /
+                    ((IFNULL(t.qt, 0)+IFNULL(s.q0 , 0)+IFNULL(s.q1 , 0)+IFNULL(s.q2 , 0)+IFNULL(s.q3 , 0)+IFNULL(s.q4 , 0)+IFNULL(s.q5 , 0)+IFNULL(s.q6 , 0)+IFNULL(s.q7 , 0)+IFNULL(s.q8 , 0)+IFNULL(s.q9 , 0)+
+                    IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0))) AS se
+                FROM Topics t
+                LEFT JOIN Seeders s ON t.id = s.id
+                WHERE ss = :ss
+                AND strftime('%s', 'now') - rg >= 2592000
+            ) AS seeds
+            INNER JOIN Forums f ON seeds.ss = f.id";
         $data = Db::query_database(
-            "SELECT
-				f.id AS id,
-				f.na AS na,
-				COUNT(CASE WHEN seeds.se = 0 THEN 1 ELSE NULL END) AS Count0,
-				SUM(CASE WHEN seeds.se = 0 THEN seeds.si ELSE 0 END) AS Size0,
-				COUNT(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN 1 ELSE NULL END) AS Count5,
-				SUM(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN seeds.si ELSE 0 END) AS Size5,
-				COUNT(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN 1 ELSE NULL END) AS Count10,
-				SUM(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN seeds.si ELSE 0 END) AS Size10,
-				COUNT(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN 1 ELSE NULL END) AS Count15,
-				SUM(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN seeds.si ELSE 0 END) AS Size15,
-				f.qt AS qt,
-				f.si AS si
-			FROM (
-				SELECT
-					t.id,
-					t.si,
-					t.st,
-					t.ss,
-					(CAST((IFNULL(t.se, 0)+IFNULL(s.d0 , 0)+IFNULL(s.d1 , 0)+IFNULL(s.d2 , 0)+IFNULL(s.d3 , 0)+IFNULL(s.d4 , 0)+IFNULL(s.d5 , 0)+IFNULL(s.d6 , 0)+IFNULL(s.d7 , 0)+IFNULL(s.d8 , 0)+IFNULL(s.d9 , 0)+
-					IFNULL(s.d10, 0)+IFNULL(s.d11, 0)+IFNULL(s.d12, 0)+IFNULL(s.d13, 0)) as FLOAT)) /
-					((IFNULL(t.qt, 0)+IFNULL(s.q0 , 0)+IFNULL(s.q1 , 0)+IFNULL(s.q2 , 0)+IFNULL(s.q3 , 0)+IFNULL(s.q4 , 0)+IFNULL(s.q5 , 0)+IFNULL(s.q6 , 0)+IFNULL(s.q7 , 0)+IFNULL(s.q8 , 0)+IFNULL(s.q9 , 0)+
-					IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0))) AS se
-				FROM Topics t
-				LEFT JOIN Seeders s ON t.id = s.id
-				WHERE ss = :ss
-				AND strftime('%s', 'now') - rg >= 2592000
-			) AS seeds
-			INNER JOIN Forums f ON seeds.ss = f.id",
-            array('ss' => $forum_id), true
+            $request,
+            array('ss' => $forum_id),
+            true
         );
 
         $statistics[$forum_id] = $data[0];
@@ -81,18 +83,28 @@ try {
         // состояние раздела (цвет)
         if (preg_match('/DVD|HD/', $e['na'])) {
             $size = pow(1024, 4);
-            $state = $e['Size5'] + $e['Size0'] < $size
-            ? $e['Size5'] + $e['Size0'] >= $size * 3 / 4
-            ? 'warning'
-            : 'ok'
-            : 'critical';
+            if ($e['Size5'] + $e['Size0'] < $size) {
+                $state = $e['Size5'] + $e['Size0'] >= $size * 3 / 4 ? 'warning' : 'ok';
+            } else {
+                $state = 'critical';
+            }
         } else {
             $size = pow(1024, 4) / 2;
-            $state = $e['Count5'] + $e['Count0'] < 1000 && $e['Size5'] + $e['Size0'] < $size
-            ? $e['Count5'] + $e['Count0'] >= 500 || $e['Size5'] + $e['Size0'] >= $size / 2
-            ? 'warning'
-            : 'ok'
-            : 'critical';
+            if (
+                $e['Count5'] + $e['Count0'] < 1000
+                && $e['Size5'] + $e['Size0'] < $size
+            ) {
+                if (
+                    $e['Count5'] + $e['Count0'] >= 500
+                    || $e['Size5'] + $e['Size0'] >= $size / 2
+                ) {
+                    $state = 'warning';
+                } else {
+                    $state = 'ok';
+                }
+            } else {
+                $state = 'critical';
+            }
         }
         // байты
         $e['Size0'] = convert_bytes($e['Size0']);
@@ -126,8 +138,10 @@ try {
     ));
 
 } catch (Exception $e) {
+
     echo json_encode(array(
         'tbody' => '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>',
         'tfoot' => '',
     ));
+
 }

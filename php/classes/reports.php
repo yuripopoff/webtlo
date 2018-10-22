@@ -10,8 +10,34 @@ class Reports
     protected $login;
     protected $forum_url;
 
-    private $months = array('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
-    private $months_ru = array('Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек');
+    private $months = array(
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    );
+    private $months_ru = array(
+        'Янв',
+        'Фев',
+        'Мар',
+        'Апр',
+        'Май',
+        'Июн',
+        'Июл',
+        'Авг',
+        'Сен',
+        'Окт',
+        'Ноя',
+        'Дек',
+    );
 
     public function __construct($forum_url, $login, $paswd)
     {
@@ -45,7 +71,10 @@ class Reports
             $data = curl_exec($this->ch);
             if ($data === false) {
                 $http_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-                if ($http_code < 300 && $try_number <= $try) {
+                if (
+                    $http_code < 300
+                    && $try_number <= $try
+                ) {
                     Log::append("Повторная попытка $try_number/$try получить данные.");
                     sleep(5);
                     $try_number++;
@@ -85,7 +114,10 @@ class Reports
             unset($data);
             $topic_main = $html->find('table.forum > tbody:first');
             $pages = $html->find('a.pg:last')->prev();
-            if (!empty($pages) && $i == 0) {
+            if (
+                !empty($pages)
+                && $i == 0
+            ) {
                 $page = $html->find('a.pg:last')->prev()->text();
                 $page_id = $html->find('a.pg:last')->attr('href');
                 $page_id = preg_replace('/.*id=([^\&]*).*/', '$1', $page_id);
@@ -139,7 +171,10 @@ class Reports
             unset($data);
             $topic_main = $html->find('table.topic:first');
             $pages = $html->find('a.pg:last')->prev();
-            if (!empty($pages) && $i == 0) {
+            if (
+                !empty($pages)
+                && $i == 0
+            ) {
                 $page = $html->find('a.pg:last')->prev()->text();
                 $page_id = $html->find('a.pg:last')->attr('href');
                 $page_id = preg_replace('/.*id=([^\&]*).*/', '$1', $page_id);
@@ -150,7 +185,7 @@ class Reports
                 foreach ($topic_main->find('tr') as $row) {
                     $row = pq($row);
                     $post_id = $row->find('a.small')->attr('href');
-                    if (!empty($post_id) && preg_match('/#[0-9]+$/', $post_id)) {
+                    if (preg_match('/#[0-9]+$/', $post_id)) {
                         $post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
                         if ($last_post) {
                             phpQuery::unloadDocuments();
@@ -181,7 +216,10 @@ class Reports
             unset($data);
             $topic_main = $html->find('table.forum > tr.hl-tr');
             $pages = $html->find('a.pg:last')->prev();
-            if (!empty($pages) && $i == 0) {
+            if (
+                !empty($pages)
+                && $i == 0
+            ) {
                 $page = $html->find('a.pg:last')->prev()->text();
             }
             unset($html);
@@ -218,7 +256,10 @@ class Reports
             unset($data);
             $topic_main = $html->find('table#topic_main');
             $pages = $html->find('a.pg:last')->prev();
-            if (!empty($pages) && $i == 0) {
+            if (
+                !empty($pages)
+                && $i == 0
+            ) {
                 $page = $html->find('a.pg:last')->prev()->text();
             }
             unset($html);
@@ -232,7 +273,10 @@ class Reports
                     }
                     // если нужны только чужие посты
                     $nickname = $row->find('p.nick > a')->text();
-                    if ($exclude && $nickname == $this->login) {
+                    if (
+                        $exclude
+                        && $nickname == $this->login
+                    ) {
                         continue;
                     }
                     // вытаскиваем дату отправки/редактирования сообщения
@@ -245,7 +289,10 @@ class Reports
                     $topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
                     $days_diff = Date::now()->diff($topic_date)->format('%a');
                     // пропускаем сообщение, если оно старше $reg_days дней
-                    if ($days_diff > $reg_days && $reg_days != -1) {
+                    if (
+                        $days_diff > $reg_days
+                        && $reg_days != -1
+                    ) {
                         continue;
                     }
                     // получаем id раздач хранимых другими хранителями
@@ -255,9 +302,7 @@ class Reports
                             $topic = pq($topic);
                             if (preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))) {
                                 $topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-                                $keepers[] = $exclude
-                                ? array('id' => $topic_id, 'nick' => $nickname)
-                                : $topic_id;
+                                $keepers[] = $exclude ? array('id' => $topic_id, 'nick' => $nickname) : $topic_id;
                             }
                         }
                     }
@@ -286,7 +331,10 @@ class Reports
             unset($data);
             $topic_main = $html->find('table#topic_main');
             $pages = $html->find('a.pg:last')->prev();
-            if (!empty($pages) && $i == 0) {
+            if (
+                !empty($pages)
+                && $i == 0
+            ) {
                 $page = $html->find('a.pg:last')->prev()->text();
             }
             unset($html);

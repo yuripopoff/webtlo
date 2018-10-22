@@ -127,8 +127,11 @@ function get_settings($filename = "")
 
     // установка настроек прокси
     Proxy::options(
-        $config['proxy_activate_forum'], $config['proxy_activate_api'],
-        $config['proxy_type'], $config['proxy_address'], $config['proxy_auth']
+        $config['proxy_activate_forum'],
+        $config['proxy_activate_api'],
+        $config['proxy_type'],
+        $config['proxy_address'],
+        $config['proxy_auth']
     );
 
     return $config;

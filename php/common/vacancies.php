@@ -21,7 +21,11 @@ $cfg = get_settings();
 Db::query_database("CREATE TEMP TABLE Keepers2 (id INT NOT NULL)");
 
 // просканировать все актуальные списки
-$reports = new Reports($cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+$reports = new Reports(
+    $cfg['forum_url'],
+    $cfg['tracker_login'],
+    $cfg['tracker_paswd']
+);
 $topics_ids = $reports->scanning_viewforum(1584);
 foreach ($topics_ids as $topic_id) {
     $keepers = $reports->scanning_viewtopic($topic_id, false, 30);
@@ -29,7 +33,10 @@ foreach ($topics_ids as $topic_id) {
         $keepers = array_chunk($keepers, 500);
         foreach ($keepers as $keepers) {
             $select = str_repeat('SELECT ? UNION ALL ', count($keepers) - 1) . 'SELECT ?';
-            Db::query_database("INSERT INTO temp.Keepers2 (id) $select", $keepers);
+            Db::query_database(
+                "INSERT INTO temp.Keepers2 (id) $select",
+                $keepers
+            );
             unset($select);
         }
     }
@@ -51,14 +58,13 @@ $avg = "( se * 1. + $sum_se ) / ( qt + $sum_qt )";
 $in = str_repeat('?,', count($exclude) - 1) . '?';
 $ids = Db::query_database(
     "SELECT ss,si FROM Topics
-    LEFT JOIN Seeders
-    ON Seeders.id = Topics.id
-    WHERE st IN (0,2,3,8,10)
-    AND ss NOT IN ($in)
-    AND $avg <= 0.5
+    LEFT JOIN Seeders ON Seeders.id = Topics.id
+    WHERE st IN (0,2,3,8,10) AND ss NOT IN ($in) AND $avg <= 0.5
     AND strftime('%s','now') - rg >= 2592000
     AND Topics.id NOT IN (SELECT id FROM temp.Keepers2)",
-    $exclude, true, PDO::FETCH_COLUMN | PDO::FETCH_GROUP
+    $exclude,
+    true,
+    PDO::FETCH_COLUMN | PDO::FETCH_GROUP
 );
 
 // добавляем "включения"
@@ -71,7 +77,9 @@ foreach ($include as $forum_id) {
 // получаем список всех подразделов
 $forums = Db::query_database(
     "SELECT id,na,qt,si FROM Forums WHERE qt > 0",
-    array(), true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+    array(),
+    true,
+    PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
 );
 
 // разбираем названия подразделов
@@ -113,6 +121,9 @@ uksort($topics, function ($a, $b) {
 });
 
 $output = "";
+$forum_pattern = '[spoiler="%s | %s шт. | %s"]%s[/spoiler]\n';
+$sub_forum_pattern = '[url=tracker.php?f=%s&tm=-1&o=10&s=1&oop=1]' .
+    '[color=%s][u]%s[/u][/color][/url] - %s шт. (%s)\n';
 
 // формируем список вакансий
 foreach ($topics as $forum => &$sub_forums) {
@@ -134,32 +145,58 @@ foreach ($topics as $forum => &$sub_forums) {
             if (!in_array($value['id'], $include)) {
                 if (preg_match('/DVD|HD/i', $title)) {
                     $size = pow(1024, 4);
-                    $color = $value['si'] < $size
-                    ? $value['si'] >= $size * 3 / 4
-                    ? 'orange'
-                    : 'green'
-                    : 'red';
+                    if ($value['si'] < $size) {
+                        $color = $value['si'] >= $size * 3 / 4 ? 'orange' : 'green';
+                    } else {
+                        $color = 'red';
+                    }
                 } else {
                     $size = pow(1024, 4) / 2;
-                    $color = $value['qt'] < 1000 && $value['si'] < $size
-                    ? $value['qt'] >= 500 || $value['si'] >= $size / 2
-                    ? 'orange'
-                    : 'green'
-                    : 'red';
+                    if (
+                        $value['qt'] < 1000
+                        && $value['si'] < $size
+                    ) {
+                        $color = $value['qt'] >= 500 || $value['si'] >= $size / 2 ? 'orange' : 'green';
+                    } else {
+                        $color = 'red';
+                    }
                 }
                 if ($color == 'green') {
                     continue;
                 }
             }
             $subject = $title == 'root' ? $sub_forum . ' (корень раздела)' : $title;
-            $sub_forum_list .= in_array($value['id'], $include)
-            ? "[url=tracker.php?f=${value['id']}&tm=-1&o=10&s=1&oop=1][color=red][u]${subject}[/u][/color][/url]\n"
-            : "[url=tracker.php?f=${value['id']}&tm=-1&o=10&s=1&oop=1][color=$color][u]${subject}[/u][/color][/url] - ${value['qt']} шт. (" . convert_bytes($value['si']) . ")\n";
+            if (in_array($value['id'], $include)) {
+                $sub_forum_list .= sprintf(
+                    $sub_forum_pattern,
+                    $value['id'],
+                    'red',
+                    $subject,
+                    '-',
+                    '-'
+                );
+            } else {
+                $sub_forum_list .= sprintf(
+                    $sub_forum_pattern,
+                    $value['id'],
+                    $color,
+                    $subject,
+                    $value['qt'],
+                    convert_bytes($value['si'])
+                );
+            }
         }
-        $forum_list .= !empty($sub_forum_list) ? "\n[b]${sub_forum}[/b]\n\n$sub_forum_list" : "";
+        if (!empty($sub_forum_list)) {
+            $forum_list .= '\n[b]' . $sub_forum . '[/b]\n\n' . $sub_forum_list;
+        }
     }
     if (!empty($forum_list)) {
-        // выводим на экран
-        $output .= "[spoiler=\"${forum} | $qt шт. | " . convert_bytes($si) . "\"]${forum_list}[/spoiler]\n";
+        $output .= sprintf(
+            $forum_pattern,
+            $forum,
+            $qt,
+            convert_bytes($si),
+            $forum_list
+        );
     }
 }

@@ -17,10 +17,13 @@ class Proxy
 
     public static function options($activate_forum, $activate_api, $type, $address = "", $auth = "")
     {
-        self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null);
-        self::$address = (in_array(null, explode(':', $address)) ? null : $address);
-        self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
-        if ($activate_forum || $activate_api) {
+        self::$type = array_key_exists($type, self::$types) ? self::$types[$type] : null;
+        self::$address = in_array(null, explode(':', $address)) ? null : $address;
+        self::$auth = in_array(null, explode(':', $auth)) ? null : $auth;
+        if (
+            $activate_forum
+            || $activate_api
+        ) {
             self::$proxy = self::set_proxy($activate_forum, $activate_api);
             Log::append(
                 'Используется ' . mb_strtoupper($type) . '-прокси: "' . $address .

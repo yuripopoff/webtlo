@@ -10,7 +10,10 @@ try {
         $forum_id = (int) $_POST['forum_id'];
     }
 
-    if (!is_int($forum_id) || $forum_id < 0) {
+    if (
+        !is_int($forum_id)
+        || $forum_id < 0
+    ) {
         throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");
     }
 
@@ -33,11 +36,17 @@ try {
     // update_time[0] время последнего обновления сведений
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = 7777",
-        array(), true, PDO::FETCH_COLUMN
+        array(),
+        true,
+        PDO::FETCH_COLUMN
     );
 
     // подключаемся к форуму
-    $reports = new Reports($cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+    $reports = new Reports(
+        $cfg['forum_url'],
+        $cfg['tracker_login'],
+        $cfg['tracker_paswd']
+    );
 
     if ($forum_id === 0) {
 
@@ -51,7 +60,9 @@ try {
             "SELECT ss,COUNT(),SUM(si) FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs
 			WHERE dl IN (1,-1) GROUP BY ss",
-            array(), true, PDO::FETCH_NUM | PDO::FETCH_UNIQUE
+            array(),
+            true,
+            PDO::FETCH_NUM | PDO::FETCH_UNIQUE
         );
 
         if (empty($stored)) {
@@ -97,7 +108,9 @@ try {
         // получение данных о подразделе
         $forum = Db::query_database(
             "SELECT * FROM Forums WHERE id = ?",
-            array($forum_id), true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+            array($forum_id),
+            true,
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
 
         if (empty($forum)) {
@@ -109,7 +122,8 @@ try {
             "SELECT Topics.id,ss,na,si,st FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs
 			WHERE ss = ? AND dl IN (1,-1)",
-            array($forum_id), true
+            array($forum_id),
+            true
         );
 
         if (empty($topics)) {
@@ -143,7 +157,10 @@ try {
             $tmp['dlqt']++;
             $current_length = $tmp['lgth'] + $lgth;
             $available_length = $message_length_max - $spoiler_length - ($tmp['dlqt'] - $tmp['start'] + 1) * 4;
-            if ($current_length > $available_length || $tmp['dlqt'] == $topics_count) {
+            if (
+                $current_length > $available_length
+                || $tmp['dlqt'] == $topics_count
+            ) {
                 $tmp['str'] = implode('<br />[*]', $tmp['str']);
                 $tmp['msg'][] = sprintf(
                     $pattern_spoiler,
@@ -181,7 +198,7 @@ try {
 
         $topic_id = empty($topic_id) ? 'NaN' : $topic_id;
 
-        Log::append("Сканирование списков...");
+        // Log::append("Сканирование списков...");
 
         // сканируем имеющиеся списки
         $keepers = $reports->scanning_reports($topic_id);
@@ -203,7 +220,9 @@ try {
                     $in = str_repeat('?,', count($topics_ids) - 1) . '?';
                     $values = Db::query_database(
                         "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
-                        $topics_ids, true, PDO::FETCH_NUM
+                        $topics_ids,
+                        true,
+                        PDO::FETCH_NUM
                     );
                     if (!isset($stored[$keeper['nickname']])) {
                         $stored[$keeper['nickname']]['dlqt'] = 0;
@@ -269,9 +288,11 @@ try {
     ));
 
 } catch (Exception $e) {
+
     Log::append($e->getMessage());
     echo json_encode(array(
         'log' => Log::get(),
         'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />",
     ));
+
 }

@@ -21,13 +21,16 @@ if (empty($cfg['subsections'])) {
 }
 
 // создаём временные таблицы
-Db::query_database("CREATE TEMP TABLE UpdateTimeNow AS
+Db::query_database(
+    "CREATE TEMP TABLE UpdateTimeNow AS
     SELECT id,ud FROM UpdateTime WHERE 0 = 1"
 );
-Db::query_database("CREATE TEMP TABLE TopicsUpdate AS
+Db::query_database(
+    "CREATE TEMP TABLE TopicsUpdate AS
     SELECT id,ss,se,st,qt,ds FROM Topics WHERE 0 = 1"
 );
-Db::query_database("CREATE TEMP TABLE TopicsRenew AS
+Db::query_database(
+    "CREATE TEMP TABLE TopicsRenew AS
     SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1"
 );
 
@@ -48,7 +51,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // получаем дату предыдущего обновления
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = ?",
-        array($forum_id), true, PDO::FETCH_COLUMN
+        array($forum_id),
+        true,
+        PDO::FETCH_COLUMN
     );
 
     // при первом обновлении
@@ -100,7 +105,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
         $topics_data_previous = Db::query_database(
             "SELECT id,se,rg,qt,ds,length(na) as lgth FROM Topics WHERE id IN ($in)",
-            $topics_ids, true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+            $topics_ids,
+            true,
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
         unset($topics_ids);
 
@@ -131,7 +138,11 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
             // получить для раздачи info_hash и topic_title
             // если новая раздача или перерегистрированная
-            if (empty($previous_data) || $previous_data['rg'] != $topic_data[2] || $previous_data['lgth'] == 0) {
+            if (
+                empty($previous_data)
+                || $previous_data['rg'] != $topic_data[2]
+                || $previous_data['lgth'] == 0
+            ) {
                 $db_topics_renew[$topic_id] = array(
                     'id' => $topic_id,
                     'ss' => $forum_id,
@@ -222,27 +233,39 @@ if (isset($topics_delete)) {
     $topics_delete = array_chunk($topics_delete, 500);
     foreach ($topics_delete as $topics_delete) {
         $in = str_repaet('?,', count($topics_delete) - 1) . '?';
-        Db::query_database("DELETE FROM Topics WHERE id IN ($in)", $topics_delete);
+        Db::query_database(
+            "DELETE FROM Topics WHERE id IN ($in)",
+            $topics_delete
+        );
     }
 }
 
 $count_update = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsUpdate",
-    array(), true, PDO::FETCH_COLUMN
+    array(),
+    true,
+    PDO::FETCH_COLUMN
 );
 $count_renew = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsRenew",
-    array(), true, PDO::FETCH_COLUMN
+    array(),
+    true,
+    PDO::FETCH_COLUMN
 );
 
-if ($count_update[0] > 0 || $count_renew[0] > 0) {
+if (
+    $count_update[0] > 0
+    || $count_renew[0] > 0
+) {
     Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
-    Db::query_database("INSERT INTO Topics (id,ss,se,st,qt,ds)
+    Db::query_database(
+        "INSERT INTO Topics (id,ss,se,st,qt,ds)
         SELECT * FROM temp.TopicsUpdate"
     );
-    Db::query_database("INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
+    Db::query_database(
+        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
         SELECT * FROM temp.TopicsRenew"
     );
     $forums_ids = array_keys($forums_update_time);
@@ -262,7 +285,10 @@ if ($count_update[0] > 0 || $count_renew[0] > 0) {
         Db::query_database("INSERT INTO temp.UpdateTimeNow $select");
         unset($select);
     }
-    Db::query_database("INSERT INTO UpdateTime (id,ud) SELECT id,ud FROM temp.UpdateTimeNow");
+    Db::query_database(
+        "INSERT INTO UpdateTime (id,ud)
+        SELECT id,ud FROM temp.UpdateTimeNow"
+    );
     // время окончания обновления
     Db::query_database(
         "INSERT INTO UpdateTime (id,ud) SELECT 7777,?",

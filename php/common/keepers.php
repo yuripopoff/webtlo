@@ -22,13 +22,18 @@ if (empty($cfg['tracker_paswd'])) {
 }
 
 // создаём временную таблицу
-Db::query_database("CREATE TEMP TABLE KeepersNew AS
+Db::query_database(
+    "CREATE TEMP TABLE KeepersNew AS
     SELECT * FROM Keepers WHERE 0 = 1"
 );
 
 // подключаемся к форуму
 if (!isset($reports)) {
-    $reports = new Reports($cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+    $reports = new Reports(
+        $cfg['forum_url'],
+        $cfg['tracker_login'],
+        $cfg['tracker_paswd']
+    );
 }
 
 // получаем данные
@@ -59,7 +64,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 // записываем изменения в локальную базу
 $count_keepers = Db::query_database(
     "SELECT COUNT() FROM temp.KeepersNew",
-    array(), true, PDO::FETCH_COLUMN
+    array(),
+    true,
+    PDO::FETCH_COLUMN
 );
 
 if ($count_keepers[0] > 0) {
@@ -68,11 +75,13 @@ if ($count_keepers[0] > 0) {
 
     Db::query_database("INSERT INTO Keepers SELECT * FROM temp.KeepersNew");
 
-    Db::query_database("DELETE FROM Keepers WHERE id NOT IN (
-        SELECT Keepers.id FROM temp.KeepersNew LEFT JOIN Keepers
-        ON temp.KeepersNew.id  = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
-        WHERE Keepers.id IS NOT NULL
-    )");
+    Db::query_database(
+        "DELETE FROM Keepers WHERE id NOT IN (
+            SELECT Keepers.id FROM temp.KeepersNew LEFT JOIN Keepers
+            ON temp.KeepersNew.id  = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
+            WHERE Keepers.id IS NOT NULL
+        )"
+    );
 
 }
 

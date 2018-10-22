@@ -11,7 +11,12 @@ try {
 
     $pattern = is_array($_GET['term']) ? $_GET['term'] : array($_GET['term']);
 
-    $q = Db::query_database("SELECT COUNT() FROM Forums", array(), true, PDO::FETCH_COLUMN);
+    $q = Db::query_database(
+        "SELECT COUNT() FROM Forums",
+        array(),
+        true,
+        PDO::FETCH_COLUMN
+    );
 
     if (empty($q[0])) {
         // дёргаем скрипт
@@ -23,8 +28,10 @@ try {
     foreach ($pattern as $pattern) {
         $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
         $data = Db::query_database(
-            "SELECT id AS value, na AS label FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
-            array('term' => $pattern), true
+            "SELECT id AS value, na AS label FROM Forums
+            WHERE id LIKE :term OR na LIKE :term ORDER BY na",
+            array('term' => $pattern),
+            true
         );
         $forums = array_merge_recursive($forums, $data);
     }
