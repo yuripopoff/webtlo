@@ -292,15 +292,18 @@ try {
             ) {
                 continue;
             }
-            // хранители на раздаче
+            // список хранителей на раздаче
             $keepers_list = '';
             if (isset($keepers[$topic_data['id']])) {
-                $keepers_list = '~> ' . implode(', ', $keepers[$topic_data['id']]);
+                $keepers_list = array_map(function ($e) {
+                    return '<span class="keeper">' . $e . '</span>';
+                }, $keepers[$topic_data['id']]);
+                $keepers_list = '~> ' . implode(', ', $keepers_list);
             }
             // фильтрация по фразе
             if (!empty($filter_phrase)) {
                 if (empty($filter_by_phrase)) {
-                    if (!mb_eregi($filter_phrase, $keeper)) {
+                    if (!mb_eregi($filter_phrase, $keepers_list)) {
                         continue;
                     }
                 } else {

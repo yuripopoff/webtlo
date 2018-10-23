@@ -46,7 +46,7 @@ try {
     $hashes = Db::query_database(
         "SELECT cl,Clients.hs FROM Topics
 		LEFT JOIN Clients ON Topics.hs = Clients.hs
-		WHERE id IN ($topics_ids)",
+		WHERE Clients.hs IS NOT NULL AND id IN ($topics_ids)",
         array(),
         true,
         PDO::FETCH_GROUP | PDO::FETCH_COLUMN
