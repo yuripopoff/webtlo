@@ -28,19 +28,25 @@ $reports = new Reports(
 );
 $topics_ids = $reports->scanning_viewforum(1584);
 foreach ($topics_ids as $topic_id) {
-    $keepers = $reports->scanning_viewtopic($topic_id, false, 30);
-    if (count($keepers) > 0) {
-        $keepers = array_chunk($keepers, 500);
-        foreach ($keepers as $keepers) {
-            $select = str_repeat('SELECT ? UNION ALL ', count($keepers) - 1) . 'SELECT ?';
-            Db::query_database(
-                "INSERT INTO temp.Keepers2 (id) $select",
-                $keepers
-            );
-            unset($select);
+    $keepers = $reports->scanning_viewtopic($topic_id, 30);
+    if (!empty($keepers)) {
+        foreach ($keepers as &$keeper) {
+            if (empty($keeper['topics_ids'])) {
+                continue;
+            }
+            $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 500);
+            foreach ($keeper['topics_ids'] as $keeper_topics_ids) {
+                $select = str_repeat('SELECT ? UNION ALL ', count($keeper_topics_ids) - 1) . 'SELECT ?';
+                Db::query_database(
+                    "INSERT INTO temp.Keepers2 (id) $select",
+                    $keeper_topics_ids
+                );
+                unset($select);
+            }
         }
     }
     unset($keepers);
+    unset($keeper);
 }
 unset($topics_ids);
 unset($reports);

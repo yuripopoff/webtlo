@@ -5,29 +5,36 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/user_details.php';
 
-    parse_str($_POST['cfg']);
+    parse_str($_POST['cfg'], $cfg);
 
     if (
-        empty($tracker_username)
-        || empty($tracker_password)
+        empty($cfg['tracker_username'])
+        || empty($cfg['tracker_password'])
     ) {
         throw new Exception();
     }
 
-    // прокси
-    $activate_forum = isset($proxy_activate_forum) ? 1 : 0;
-    $activate_api = isset($proxy_activate_api) ? 1 : 0;
-    $proxy_address = "$proxy_hostname:$proxy_port";
-    $proxy_auth = "$proxy_login:$proxy_paswd";
+    // параметры прокси
+    $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
+    $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
+    $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
+    $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+
+    // устанавливаем прокси
     Proxy::options(
         $activate_forum,
         $activate_api,
-        $proxy_type,
+        $cfg['proxy_type'],
         $proxy_address,
         $proxy_auth
     );
 
-    UserDetails::get_details($forum_url, $tracker_username, $tracker_password);
+    // получаем ключи пользователя
+    UserDetails::get_details(
+        $cfg['forum_url'],
+        $cfg['tracker_username'],
+        $cfg['tracker_password']
+    );
 
     echo json_encode(
         array(

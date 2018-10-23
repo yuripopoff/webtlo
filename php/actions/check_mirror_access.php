@@ -2,30 +2,42 @@
 
 include_once dirname(__FILE__) . '/../common.php';
 
-// парсим настройки
-if (isset($_POST['cfg'])) {
-    parse_str($_POST['cfg']);
-}
-
 // проверяемый url
 if (isset($_POST['url'])) {
     $url = $_POST['url'];
 }
 
-if (empty($url)) {
-    return;
-}
-
+// тип url
 if (isset($_POST['url_type'])) {
     $url_type = $_POST['url_type'];
 }
 
-// прокси
-$activate_forum = isset($proxy_activate_forum) ? 1 : 0;
-$activate_api = isset($proxy_activate_api) ? 1 : 0;
-$proxy_address = "$proxy_hostname:$proxy_port";
-$proxy_auth = "$proxy_login:$proxy_paswd";
-Proxy::options($activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth);
+if (
+    empty($url)
+    || empty($url_type)
+) {
+    return false;
+}
+
+// парсим настройки
+if (isset($_POST['cfg'])) {
+    parse_str($_POST['cfg'], $cfg);
+}
+
+// параметры прокси
+$activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
+$activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
+$proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
+$proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+
+// устанавливаем прокси
+Proxy::options(
+    $activate_forum,
+    $activate_api,
+    $cfg['proxy_type'],
+    $proxy_address,
+    $proxy_auth
+);
 
 $ch = curl_init();
 

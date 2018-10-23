@@ -201,7 +201,7 @@ try {
         // Log::append("Сканирование списков...");
 
         // сканируем имеющиеся списки
-        $keepers = $reports->scanning_reports($topic_id);
+        $keepers = $reports->scanning_viewtopic($topic_id);
 
         if (empty($keepers)) {
             throw new Exception("Error: Не удалось просканировать списки для подраздела № $forum_id");
@@ -209,13 +209,13 @@ try {
 
         // разбираем инфу, полученную из списков
         foreach ($keepers as $index => $keeper) {
-            // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics' => array( 0,1,2 ) )
+            // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
             if ($keeper['nickname'] == $cfg['tracker_login']) {
                 continue;
             }
             // считаем сообщения других хранителей в подразделе
-            if (!empty($keeper['topics'])) {
-                $topics_ids = array_chunk($keeper['topics'], 500);
+            if (!empty($keeper['topics_ids'])) {
+                $topics_ids = array_chunk($keeper['topics_ids'], 500);
                 foreach ($topics_ids as $topics_ids) {
                     $in = str_repeat('?,', count($topics_ids) - 1) . '?';
                     $values = Db::query_database(

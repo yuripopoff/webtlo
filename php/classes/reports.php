@@ -242,81 +242,7 @@ class Reports
         return $topics_ids;
     }
 
-    public function scanning_viewtopic($topic_id, $exclude = false, $reg_days = -1)
-    {
-        if (empty($topic_id)) {
-            return false;
-        }
-        $keepers = array();
-        $i = 0;
-        $page = 1;
-        while ($page > 0) {
-            $data = $this->make_request($this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i");
-            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
-            unset($data);
-            $topic_main = $html->find('table#topic_main');
-            $pages = $html->find('a.pg:last')->prev();
-            if (
-                !empty($pages)
-                && $i == 0
-            ) {
-                $page = $html->find('a.pg:last')->prev()->text();
-            }
-            unset($html);
-            if (!empty($topic_main)) {
-                $topic_main = pq($topic_main);
-                foreach ($topic_main->find('tbody') as $row) {
-                    $row = pq($row);
-                    $post_id = str_replace('post_', '', $row->attr('id'));
-                    if (empty($post_id)) {
-                        continue;
-                    }
-                    // если нужны только чужие посты
-                    $nickname = $row->find('p.nick > a')->text();
-                    if (
-                        $exclude
-                        && $nickname == $this->login
-                    ) {
-                        continue;
-                    }
-                    // вытаскиваем дату отправки/редактирования сообщения
-                    $posted = $row->find('.p-link')->text();
-                    $posted_since = $row->find('.posted_since')->text();
-                    if (preg_match('/(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})/', $posted_since, $since)) {
-                        $posted = $since[0];
-                    }
-                    $posted = str_replace($this->months_ru, $this->months, $posted);
-                    $topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
-                    $days_diff = Date::now()->diff($topic_date)->format('%a');
-                    // пропускаем сообщение, если оно старше $reg_days дней
-                    if (
-                        $days_diff > $reg_days
-                        && $reg_days != -1
-                    ) {
-                        continue;
-                    }
-                    // получаем id раздач хранимых другими хранителями
-                    $topics = $row->find('a.postLink');
-                    if (!empty($topics)) {
-                        foreach ($topics as $topic) {
-                            $topic = pq($topic);
-                            if (preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))) {
-                                $topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-                                $keepers[] = $exclude ? array('id' => $topic_id, 'nick' => $nickname) : $topic_id;
-                            }
-                        }
-                    }
-                    unset($topics);
-                }
-            }
-            $page--;
-            $i += 30;
-            phpQuery::unloadDocuments();
-        }
-        return $keepers;
-    }
-
-    public function scanning_reports($topic_id)
+    public function scanning_viewtopic($topic_id, $posted_days = -1)
     {
         if (empty($topic_id)) {
             return false;
@@ -326,7 +252,9 @@ class Reports
         $page = 1;
         $index = 0;
         while ($page > 0) {
-            $data = $this->make_request($this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i");
+            $data = $this->make_request(
+                $this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i"
+            );
             $html = phpQuery::newDocumentHTML($data, 'UTF-8');
             unset($data);
             $topic_main = $html->find('table#topic_main');
@@ -351,6 +279,26 @@ class Reports
                         'post_id' => $post_id,
                         'nickname' => $nickname,
                     );
+                    // вытаскиваем дату отправки/редактирования сообщения
+                    $posted = $row->find('.p-link')->text();
+                    $posted_since = $row->find('.posted_since')->text();
+                    if (preg_match('/(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})/', $posted_since, $since)) {
+                        $posted = $since[0];
+                    }
+                    $posted = str_replace($this->months_ru, $this->months, $posted);
+                    $topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
+                    if (!$topic_date) {
+                        throw new Exception("Error: Неправильный формат даты отправки сообщения - " . $posted);
+                    }
+                    $keepers[$index]['posted'] = $topic_date->format('U');
+                    $days_diff = Date::now()->diff($topic_date)->format('%a');
+                    // пропускаем сообщение, если оно старше $posted_days дней
+                    if (
+                        $posted_days != -1
+                        && $days_diff > $posted_days
+                    ) {
+                        continue;
+                    }
                     // получаем id раздач хранимых другими хранителями
                     $topics = $row->find('a.postLink');
                     if (!empty($topics)) {
@@ -358,7 +306,7 @@ class Reports
                             $topic = pq($topic);
                             if (preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))) {
                                 $topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-                                $keepers[$index]['topics'][] = $topic_id;
+                                $keepers[$index]['topics_ids'][] = $topic_id;
                             }
                         }
                     }
@@ -370,6 +318,7 @@ class Reports
             $i += 30;
             phpQuery::unloadDocuments();
         }
+        // array( 'post_id', 'nickname', 'posted', topics_ids' => array( topic_id,.. ) )
         return $keepers;
     }
 
@@ -400,7 +349,7 @@ class Reports
         if (!empty($msg)) {
             Log::append("Error: $msg ($topic_id).");
             phpQuery::unloadDocuments();
-            return;
+            return false;
         }
         $post_id = $html->find('div.mrg_16 > a')->attr('href');
         if (empty($post_id)) {
@@ -413,10 +362,10 @@ class Reports
             }
             Log::append("Error: $msg ($topic_id).");
             phpQuery::unloadDocuments();
-            return;
+            return false;
         }
-        $post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
         phpQuery::unloadDocuments();
+        $post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
         return $post_id;
     }
 
