@@ -23,24 +23,27 @@ function showResult(text) {
 	$("#topics_result").html(text);
 }
 
-var lock = 0;
+var lock_actions = 0;
 
 function block_actions() {
-	if (lock == 0) {
+	if (lock_actions == 0) {
 		$("#topics_control button").prop("disabled", true);
 		$("#subsections").selectmenu("disable");
 		$("#loading, #process").show();
-		lock = 1;
+		lock_actions = 1;
 	} else {
 		$("#topics_control button").prop("disabled", false);
-		if ($("#subsections").val() < 1 || !$("input[name=filter_status]").eq(1).prop("checked")) {
+		if (
+			$("#subsections").val() < 1
+			|| !$("input[name=filter_status]").eq(1).prop("checked")
+		) {
 			$(".tor_add").prop("disabled", true);
 		} else {
 			$(".tor_stop, .tor_remove, .tor_label, .tor_start").prop("disabled", true);
 		}
 		$("#subsections").selectmenu("enable");
 		$("#loading, #process").hide();
-		lock = 0;
+		lock_actions = 0;
 	}
 }
 // выполнить функцию с задержкой
@@ -72,7 +75,7 @@ function doSortSelectByValue(select_id) {
 }
 
 // получение отчётов
-function getReport($event, ui) {
+function getReport(event, ui) {
 	var forum_id = ui.item.value;
 	if ($.isEmptyObject(forum_id)) {
 		return false;
@@ -86,7 +89,7 @@ function getReport($event, ui) {
 			$("#report_content").html("<i class=\"fa fa-spinner fa-pulse\"></i>");
 		},
 		success: function (response) {
-			var response = $.parseJSON(response);
+			response = $.parseJSON(response);
 			$("#log").append(response.log);
 			$("#report_content").html(response.report);
 			//инициализация "аккордиона" сообщений
@@ -127,3 +130,27 @@ function getReport($event, ui) {
 		},
 	});
 }
+
+// https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
+(function ($) {
+	$.fn.serializeAllArray = function () {
+		var data = $(this).serializeArray();
+		$(':disabled[name]', this).each(function () {
+			if (
+				(
+					$(this).attr("type") === "checkbox"
+					|| $(this).attr("type") === "radio"
+				) && !$(this).prop("checked")
+			) {
+				return true;
+			}
+			data.push(
+				{
+					name: this.name,
+					value: $(this).val()
+				}
+			);
+		});
+		return data;
+	}
+})(jQuery);

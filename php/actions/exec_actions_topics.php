@@ -44,9 +44,11 @@ try {
 
     $topics_ids = implode(',', $topics_ids);
     $hashes = Db::query_database(
-        "SELECT cl,Clients.hs FROM Topics
-		LEFT JOIN Clients ON Topics.hs = Clients.hs
-		WHERE Clients.hs IS NOT NULL AND id IN ($topics_ids)",
+        "SELECT cl,Clients.hs FROM Clients
+        LEFT JOIN Topics ON Topics.hs = Clients.hs
+        LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Clients.hs
+        WHERE Topics.id IN ($topics_ids) OR TopicsUntracked.id IN ($topics_ids)
+        AND Clients.hs IS NOT NULL",
         array(),
         true,
         PDO::FETCH_GROUP | PDO::FETCH_COLUMN

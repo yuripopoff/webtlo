@@ -30,7 +30,10 @@ $(document).ready(function () {
 
     /* инициализация кнопок */
     $("button").button();
-    $("#select, #control, #new-torrents, #filter").buttonset();
+    $("#toolbar-select-topics").buttonset();
+    $("#toolbar-control-topics").buttonset();
+    $("#toolbar-new-torrents").buttonset();
+    $("#toolbar-filter-topics").buttonset();
     $("#log_tabs").tabs();
 
     // фильтрация раздач, количество сидов
@@ -51,11 +54,11 @@ $(document).ready(function () {
     }).datepicker(
         "setDate",
         $("#filter_date_release").val()
-        ).css(
+    ).css(
         "width", 90
-        ).datepicker(
+    ).datepicker(
         "refresh"
-        );
+    );
 
     // регулировка раздач, количество пиров
     $("#peers").spinner({

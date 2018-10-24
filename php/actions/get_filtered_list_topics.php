@@ -92,7 +92,7 @@ try {
 
         // чёрный список
         $topics = Db::query_database(
-            "SELECT Topics.id,na,si,rg,comment FROM Topics
+            "SELECT Topics.id,na,si,rg,se,comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
 			WHERE Blacklist.id IS NOT NULL",
             array(),

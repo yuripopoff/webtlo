@@ -10,6 +10,7 @@ $cfg = get_settings();
 
 // торрент-клиенты
 $tcs = '';
+$ss_tcs = '';
 if (isset($cfg['clients'])) {
     $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
     foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
@@ -17,6 +18,12 @@ if (isset($cfg['clients'])) {
             $tor_client_option_pattern,
             $tor_client_id,
             implode('|', $tor_client_info),
+            $tor_client_info['cm']
+        );
+        $ss_tcs .= sprintf(
+            $tor_client_option_pattern,
+            $tor_client_id,
+            '',
             $tor_client_info['cm']
         );
     }
@@ -52,7 +59,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.9.5</title>
+		<title>web-TLO-0.9.9.7</title>
 		<script src="jquery/jquery.js"></script>
 		<script src="jquery/jquery-ui.js"></script>
 		<script src="jquery/external/datepicker-ru.js"></script>
@@ -90,7 +97,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</select>
 					<div id="topics_data">
 						<div id="topics_control">
-							<div id="filter">
+							<div id="toolbar-filter-topics">
 								<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра">
 									<i class="fa fa-filter" aria-hidden="true"></i>
 								</button>
@@ -98,7 +105,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-undo" aria-hidden="true"></i>
 								</button>
 							</div>
-							<div id="select">
+							<div id="toolbar-select-topics">
 								<button type="button" class="tor_select" value="1" title="Выделить все раздачи текущего подраздела">
 									<i class="fa fa-check-square-o" aria-hidden="true"></i>
 								</button>
@@ -106,7 +113,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-square-o" aria-hidden="true"></i>
 								</button>
 							</div>
-							<div id="new-torrents">
+							<div id="toolbar-new-torrents">
 								<button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
 									<i class="fa fa-plus" aria-hidden="true"></i>
 								</button>
@@ -121,7 +128,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-ban" aria-hidden="true"></i>
 								</button>
 							</div>
-							<div id="control">
+							<div id="toolbar-control-topics">
 								<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
 									<i class="fa fa-tag" aria-hidden="true"></i>
 								</button>
@@ -202,7 +209,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										</label>
 									</fieldset>
 								</div>
-								<div class="filter_block ui-widget" title="Сортировка">
+								<div id="filter-sort-block" class="filter_block ui-widget" title="Сортировка">
 									<fieldset>
 										<label>
 											<input type="radio" name="filter_sort_direction" value="1" checked class="default" />
@@ -496,6 +503,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Торрент-клиент:
 										<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
 											<option value=0>не выбран</option>
+											<?php echo $ss_tcs ?>
 										</select>
 									</label>
 									<label class="flex">
