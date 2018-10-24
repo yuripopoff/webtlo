@@ -1,10 +1,47 @@
 $(document).ready(function () {
 
+	// обновление сведений о раздачах
+	$("#update_info").on("click", function () {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/update_info.php",
+			beforeSend: function () {
+				block_actions();
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#topics_result").text(response.result);
+				getFilteredTopics();
+			},
+			complete: function () {
+				block_actions();
+			},
+		});
+	});
+
+	// отправка отчётов
+	$("#send_reports").on("click", function () {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/send_reports.php",
+			beforeSend: function () {
+				block_actions();
+			},
+			success: function (response) {
+				$("#log").append(response);
+			},
+			complete: function () {
+				block_actions();
+			},
+		});
+	});
+
 	// сохранение настроек
 	$("#savecfg").on("click", function () {
-		forums = getForums();
-		tor_clients = getTorClients();
-		$data = $("#config").serialize();
+		var forums = getForums();
+		var tor_clients = getTorClients();
+		var $data = $("#config").serialize();
 		$.ajax({
 			context: this,
 			type: "POST",
@@ -75,25 +112,33 @@ $(document).ready(function () {
 
 	// получение bt_key, api_key, user_id
 	$("#tracker_username, #tracker_password").on("change", function () {
-		if ($("#tracker_username").val() && $("#tracker_password").val()) {
-			if (!$("#bt_key").val() || !$("#api_key").val() || !$("#user_id").val()) {
-				$data = $("#config").serialize();
-				$.ajax({
-					type: "POST",
-					url: "php/actions/get_user_details.php",
-					data: {
-						cfg: $data
-					},
-					success: function (response) {
-						var response = $.parseJSON(response);
-						$("#log").append(response.log);
-						$("#bt_key").val(response.bt_key);
-						$("#api_key").val(response.api_key);
-						$("#user_id").val(response.user_id);
-					},
-				});
-			}
+		if (
+			!$("#tracker_username").val()
+			&& !$("#tracker_password").val()
+		) {
+			return false;
+		} else if (
+			$("#bt_key").val()
+			&& $("#api_key").val()
+			&& $("#user_id").val()
+		) {
+			return false;
 		}
+		var $data = $("#config").serialize();
+		$.ajax({
+			type: "POST",
+			url: "php/actions/get_user_details.php",
+			data: {
+				cfg: $data
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#bt_key").val(response.bt_key);
+				$("#api_key").val(response.api_key);
+				$("#user_id").val(response.user_id);
+			},
+		});
 	});
 
 	// проверка закрывающего слеша
@@ -152,7 +197,7 @@ $(document).ready(function () {
 		var element_new = $(ui.newTab).children("a");
 		var name_new = $(element_new).text();
 		if (!element_new.hasClass("log_file")) {
-			return true;
+			return false;
 		}
 		// previous tab
 		var element_old = $(ui.oldTab).children("a");
@@ -175,44 +220,6 @@ $(document).ready(function () {
 			beforeSend: function () {
 				$("#log_" + name_new).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
 			}
-		});
-	});
-
-	// отправка отчётов
-	$("#send_reports").click(function () {
-		$.ajax({
-			type: "POST",
-			url: "php/actions/send_reports.php",
-			beforeSend: function () {
-				block_actions();
-				$("#process").text("Отправка отчётов на форум...");
-			},
-			success: function (response) {
-				$("#log").append(response);
-			},
-			complete: function () {
-				block_actions();
-			},
-		});
-	});
-
-	// обновление сведений о раздачах
-	$("#update_info").click(function () {
-		$.ajax({
-			type: "POST",
-			url: "php/actions/update_info.php",
-			beforeSend: function () {
-				block_actions();
-			},
-			success: function (response) {
-				response = $.parseJSON(response);
-				$("#log").append(response.log);
-				$("#topics_result").text(response.result);
-				getFilteredTopics();
-			},
-			complete: function () {
-				block_actions();
-			},
 		});
 	});
 

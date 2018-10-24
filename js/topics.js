@@ -261,18 +261,16 @@ function showCountSizeSelectedTopics(count = 0, size = 0.00) {
 
 // получение кол-ва, объёма выделенных раздач
 function getCountSizeSelectedTopics() {
-	var topics = $("#topics").find(".topic[type=checkbox]:checked");
-	if ($.isEmptyObject(topics)) {
-		showCountSizeSelectedTopics();
-		return;
-	}
-	var size = 0;
 	var count = 0;
-	topics.each(function () {
-		var data = this.dataset;
-		size += parseInt(data.size);
-		count++;
-	});
+	var size = 0.00;
+	var topics = $("#topics").find(".topic[type=checkbox]:checked");
+	if (!$.isEmptyObject(topics)) {
+		topics.each(function () {
+			var data = this.dataset;
+			size += parseInt(data.size);
+			count++;
+		});
+	}
 	showCountSizeSelectedTopics(count, size);
 }
 
@@ -325,7 +323,7 @@ $("input[name=filter_interval]").on("change", function () {
 });
 
 // сортировка по хранителю при двойном клике по его никнейму в списке раздач
-$(document).on("dblclick", ".keeper", function (e) {
+$("#topics").on("dblclick", ".keeper", function (e) {
 	$("input[name=filter_phrase]").val($(this).text());
 	$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
 	$('#filter_by_keeper').prop("checked", true);
