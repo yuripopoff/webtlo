@@ -36,23 +36,40 @@ try {
     }
 
     $tor_clients = $_POST['tor_clients'];
-    parse_str($_POST['topics_ids']);
 
     Log::append('Начато выполнение действия "' . $action . '" для выбранных раздач...');
 
     Log::append("Получение хэшей раздач с привязкой к торрент-клиенту...");
 
-    $topics_ids = implode(',', $topics_ids);
-    $hashes = Db::query_database(
-        "SELECT cl,Clients.hs FROM Clients
-        LEFT JOIN Topics ON Topics.hs = Clients.hs
-        LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Clients.hs
-        WHERE Topics.id IN ($topics_ids) OR TopicsUntracked.id IN ($topics_ids)
-        AND Clients.hs IS NOT NULL",
-        array(),
-        true,
-        PDO::FETCH_GROUP | PDO::FETCH_COLUMN
-    );
+    parse_str($_POST['topics_ids'], $topics_ids);
+
+    $topics_ids = array_chunk($topics_ids['topics_ids'], 499);
+
+    foreach ($topics_ids as $topics_ids) {
+        $in = str_repeat('?,', count($topics_ids) - 1) . '?';
+        $hashes_query = Db::query_database(
+            "SELECT cl,Clients.hs FROM Clients
+            LEFT JOIN Topics ON Topics.hs = Clients.hs
+            LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Clients.hs
+            WHERE Topics.id IN ($in) OR TopicsUntracked.id IN ($in)
+            AND Clients.hs IS NOT NULL",
+            $topics_ids,
+            true,
+            PDO::FETCH_GROUP | PDO::FETCH_COLUMN
+        );
+        foreach ($hashes_query as $tor_client_id => $hashes_query) {
+            if (isset($hashes[$tor_client_id])) {
+                $hashes[$tor_client_id] = array_merge(
+                    $hashes[$tor_client_id],
+                    $hashes_query
+                );
+            } else {
+                $hashes[$tor_client_id] = $hashes_query;
+            }
+        }
+        unset($hashes_query);
+        unset($in);
+    }
     unset($topics_ids);
 
     if (empty($hashes)) {

@@ -9,13 +9,13 @@ try {
         throw new Exception();
     }
 
-    parse_str($_POST['topics_ids'], $data);
+    parse_str($_POST['topics_ids'], $topics_ids);
 
     $value = empty($_POST['value']) ? 0 : 1;
 
-    $data['topics_ids'] = array_chunk($data['topics_ids'], 500);
+    $topics_ids = array_chunk($topics_ids['topics_ids'], 500);
 
-    foreach ($data['topics_ids'] as $topics_ids) {
+    foreach ($topics_ids as $topics_ids) {
         if ($value == 0) {
             $in = str_repeat('?,', count($topics_ids) - 1) . '?';
             Db::query_database(

@@ -22,26 +22,26 @@ try {
 
     // парсим настройки
     if (isset($_POST['cfg'])) {
-        parse_str($_POST['cfg']);
+        parse_str($_POST['cfg'], $cfg);
     }
 
-    if (empty($api_key)) {
+    if (empty($cfg['api_key'])) {
         $result = "В настройках не указан хранительский ключ API";
         throw new Exception();
     }
 
-    if (empty($user_id)) {
+    if (empty($cfg['user_id'])) {
         $result = "В настройках не указан хранительский ключ ID";
         throw new Exception();
     }
 
-    $retracker = isset($retracker) ? 1 : 0;
-    $tor_for_user = isset($tor_for_user) ? 1 : 0;
+    $cfg['retracker'] = isset($cfg['retracker']) ? 1 : 0;
+    $cfg['tor_for_user'] = isset($cfg['tor_for_user']) ? 1 : 0;
     $forum_id = isset($_POST['forum_id']) ? $_POST['forum_id'] : 0;
-    parse_str($_POST['topics_ids']);
+    parse_str($_POST['topics_ids'], $topics_ids);
 
     // выбор каталога
-    $torrent_files_path = empty($replace_passkey) ? $savedir : $dir_torrents;
+    $torrent_files_path = empty($replace_passkey) ? $cfg['savedir'] : $cfg['dir_torrents'];
 
     if (empty($torrent_files_path)) {
         $result = "В настройках не указан каталог для скачивания торрент-файлов";
@@ -59,7 +59,7 @@ try {
     // создание подкаталога
     if (
         empty($replace_passkey)
-        && isset($savesubdir)
+        && isset($cfg['savesubdir'])
     ) {
         $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
     }
@@ -70,15 +70,17 @@ try {
         throw new Exception();
     }
 
-    // прокси
-    $activate_forum = isset($proxy_activate_forum) ? 1 : 0;
-    $activate_api = isset($proxy_activate_api) ? 1 : 0;
-    $proxy_address = "$proxy_hostname:$proxy_port";
-    $proxy_auth = "$proxy_login:$proxy_paswd";
+    // параметры прокси
+    $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
+    $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
+    $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
+    $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+
+    // устанавливаем прокси
     Proxy::options(
         $activate_forum,
         $activate_api,
-        $proxy_type,
+        $cfg['proxy_type'],
         $proxy_address,
         $proxy_auth
     );
@@ -99,9 +101,14 @@ try {
     );
 
     // скачивание торрент-файлов
-    $download = new Download($forum_url, $api_key, $user_id);
+    $download = new Download(
+        $cfg['forum_url'],
+        $cfg['api_key'],
+        $cfg['user_id']
+    );
+
     foreach ($topics_ids as $topic_id) {
-        $data = $download->get_torrent_file($topic_id, $retracker);
+        $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
         if ($data === false) {
             continue;
         }
@@ -114,8 +121,8 @@ try {
             }
             $trackers = $torrent->getTrackers();
             foreach ($trackers as &$tracker) {
-                $tracker = preg_replace('/(?<==)\w+$/', $passkey, $tracker);
-                if ($tor_for_user) {
+                $tracker = preg_replace('/(?<==)\w+$/', $cfg['passkey'], $tracker);
+                if ($cfg['tor_for_user']) {
                     $tracker = preg_replace('/\w+(?==)/', 'pk', $tracker);
                 }
             }

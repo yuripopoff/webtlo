@@ -22,13 +22,13 @@ try {
     mb_regex_encoding('UTF-8');
 
     // парсим параметры фильтра
-    parse_str($_POST['filter']);
+    parse_str($_POST['filter'], $filter);
 
-    if (!isset($filter_sort)) {
+    if (!isset($filter['filter_sort'])) {
         throw new Exception("Не выбрано поле для сортировки");
     }
 
-    if (!isset($filter_sort_direction)) {
+    if (!isset($filter['filter_sort_direction'])) {
         throw new Exception("Не выбрано направление сортировки");
     }
 
@@ -61,7 +61,11 @@ try {
             true
         );
         // сортировка раздач
-        $topics = natsort_field($topics, $filter_sort, $filter_sort_direction);
+        $topics = natsort_field(
+            $topics,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
@@ -99,7 +103,11 @@ try {
             true
         );
         // сортировка раздач
-        $topics = natsort_field($topics, $filter_sort, $filter_sort_direction);
+        $topics = natsort_field(
+            $topics,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
@@ -130,43 +138,43 @@ try {
         // все хранимые раздачи
 
         // не выбраны статусы раздач
-        if (empty($filter_tracker_status)) {
+        if (empty($filter['filter_tracker_status'])) {
             throw new Exception("Не выбраны статусы раздач для трекера");
         }
 
-        if (empty($filter_client_status)) {
+        if (empty($filter['filter_client_status'])) {
             throw new Exception("Не выбраны статусы раздач для торрент-клиента");
         }
 
         // некорретный ввод значения сидов
-        if (isset($filter_interval)) {
+        if (isset($filter['filter_interval'])) {
             if (
-                !is_numeric($filter_rule_interval['from'])
-                || !is_numeric($filter_rule_interval['to'])
+                !is_numeric($filter['filter_rule_interval']['from'])
+                || !is_numeric($filter['filter_rule_interval']['to'])
             ) {
                 throw new Exception("В фильтре введено некорректное значение сидов");
             }
             if (
-                $filter_rule_interval['from'] < 0
-                || $filter_rule_interval['to'] < 0
+                $filter['filter_rule_interval']['from'] < 0
+                || $filter['filter_rule_interval']['to'] < 0
             ) {
                 throw new Exception("Значение сидов в фильтре должно быть больше 0");
             }
-            if ($filter_rule_interval['from'] > $filter_rule_interval['to']) {
+            if ($filter['filter_rule_interval']['from'] > $filter['filter_rule_interval']['to']) {
                 throw new Exception("Начальное значение сидов в фильтре должно быть меньше или равно конечному значению");
             }
         } else {
-            if (!is_numeric($filter_rule)) {
+            if (!is_numeric($filter['filter_rule'])) {
                 throw new Exception("В фильтре введено некорректное значение сидов");
             }
 
-            if ($filter_rule < 0) {
+            if ($filter['filter_rule'] < 0) {
                 throw new Exception("Значение сидов в фильтре должно быть больше 0");
             }
         }
 
         // некорректная дата
-        $date_release = DateTime::createFromFormat('d.m.Y', $filter_date_release);
+        $date_release = DateTime::createFromFormat('d.m.Y', $filter['filter_date_release']);
         if (!$date_release) {
             throw new Exception("В фильтре введена некорректная дата создания релиза");
         }
@@ -183,8 +191,8 @@ try {
         }
 
         $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
-        $st = str_repeat('?,', count($filter_tracker_status) - 1) . '?';
-        $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter_client_status);
+        $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
+        $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
         $pattern_statement = "SELECT Topics.id,na,si,rg%s FROM Topics
@@ -199,13 +207,13 @@ try {
 
         if (isset($cfg['avg_seeders'])) {
             // некорректный период средних сидов
-            if (!is_numeric($avg_seeders_period)) {
+            if (!is_numeric($filter['avg_seeders_period'])) {
                 throw new Exception("В фильтре введено некорректное значение для периода средних сидов");
             }
             // жёсткое ограничение на 30 дней для средних сидов
-            $avg_seeders_period = $avg_seeders_period > 0 ? $avg_seeders_period : 1;
-            $avg_seeders_period = $avg_seeders_period <= 30 ? $avg_seeders_period : 30;
-            for ($i = 0; $i < $avg_seeders_period; $i++) {
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
+            for ($i = 0; $i < $filter['avg_seeders_period']; $i++) {
                 $avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
                 $avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
                 $avg['qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE 1 END";
@@ -223,9 +231,9 @@ try {
         }
 
         // есть/нет хранители
-        if (isset($not_keepers)) {
+        if (isset($filter['not_keepers'])) {
             $where[] = 'AND Keepers.id IS NULL';
-        } elseif (isset($is_keepers)) {
+        } elseif (isset($filter['is_keepers'])) {
             $where[] = 'AND Keepers.id IS NOT NULL';
         }
 
@@ -251,13 +259,17 @@ try {
             $statement,
             array_merge(
                 $forums_ids,
-                $filter_tracker_status
+                $filter['filter_tracker_status']
             ),
             true
         );
 
         // сортировка раздач
-        $topics = natsort_field($topics, $filter_sort, $filter_sort_direction);
+        $topics = natsort_field(
+            $topics,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
 
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
@@ -266,20 +278,20 @@ try {
                 continue;
             }
             // фильтрация по количеству сидов
-            if (isset($filter_interval)) {
+            if (isset($filter['filter_interval'])) {
                 if (
-                    $filter_rule_interval['from'] > $topic_data['se']
-                    || $filter_rule_interval['to'] < $topic_data['se']
+                    $filter['filter_rule_interval']['from'] > $topic_data['se']
+                    || $filter['filter_rule_interval']['to'] < $topic_data['se']
                 ) {
                     continue;
                 }
             } else {
-                if ($filter_rule_direction) {
-                    if ($filter_rule < $topic_data['se']) {
+                if ($filter['filter_rule_direction']) {
+                    if ($filter['filter_rule'] < $topic_data['se']) {
                         continue;
                     }
                 } else {
-                    if ($filter_rule > $topic_data['se']) {
+                    if ($filter['filter_rule'] > $topic_data['se']) {
                         continue;
                     }
                 }
@@ -287,8 +299,8 @@ try {
             // фильтрация по статусу "зелёные"
             if (
                 isset($topic_data['ds'])
-                && isset($avg_seeders_complete)
-                && $topic_data['ds'] < $avg_seeders_period
+                && isset($filter['avg_seeders_complete'])
+                && $filter['avg_seeders_period'] > $topic_data['ds']
             ) {
                 continue;
             }
@@ -301,13 +313,13 @@ try {
                 $keepers_list = '~> ' . implode(', ', $keepers_list);
             }
             // фильтрация по фразе
-            if (!empty($filter_phrase)) {
-                if (empty($filter_by_phrase)) {
-                    if (!mb_eregi($filter_phrase, $keepers_list)) {
+            if (!empty($filter['filter_phrase'])) {
+                if (empty($filter['filter_by_phrase'])) {
+                    if (!mb_eregi($filter['filter_phrase'], $keepers_list)) {
                         continue;
                     }
                 } else {
-                    if (!mb_eregi($filter_phrase, $topic_data['na'])) {
+                    if (!mb_eregi($filter['filter_phrase'], $topic_data['na'])) {
                         continue;
                     }
                 }
@@ -323,8 +335,8 @@ try {
             // цвет пульки
             $bullet = '';
             if (isset($cfg['avg_seeders'])) {
-                if ($topic_data['ds'] < $avg_seeders_period) {
-                    $bullet = $topic_data['ds'] >= $avg_seeders_period / 2 ? 'text-warning' : 'text-danger';
+                if ($topic_data['ds'] < $filter['avg_seeders_period']) {
+                    $bullet = $topic_data['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
                 } else {
                     $bullet = 'text-success';
                 }

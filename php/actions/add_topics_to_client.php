@@ -28,15 +28,15 @@ try {
 
     // парсим настройки
     if (isset($_POST['cfg'])) {
-        parse_str($_POST['cfg']);
+        parse_str($_POST['cfg'], $cfg);
     }
 
-    if (empty($api_key)) {
+    if (empty($cfg['api_key'])) {
         $result = "В настройках не указан хранительский ключ API";
         throw new Exception();
     }
 
-    if (empty($user_id)) {
+    if (empty($cfg['user_id'])) {
         $result = "В настройках не указан хранительский ключ ID";
         throw new Exception();
     }
@@ -44,14 +44,14 @@ try {
     // разбираем настройки
     $forums = $_POST['forums'];
     $tor_clients = $_POST['tor_clients'];
-    $retracker = isset($retracker) ? 1 : 0;
-    parse_str($_POST['topics_ids']);
+    $cfg['retracker'] = isset($cfg['retracker']) ? 1 : 0;
+    parse_str($_POST['topics_ids'], $topics_ids);
 
     Log::append("Запущен процесс добавления раздач в торрент-клиенты...");
 
-    // получение ID раздач с  привязкой к подразделу
+    // получение ID раздач с привязкой к подразделу
     $forums_topics_ids = array();
-    $topics_ids = array_chunk($topics_ids, 999);
+    $topics_ids = array_chunk($topics_ids['topics_ids'], 999);
     foreach ($topics_ids as $topics_ids) {
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
         $forums_topics_ids += Db::query_database(
@@ -69,12 +69,20 @@ try {
         throw new Exception();
     }
 
-    // прокси
-    $activate_forum = isset($proxy_activate_forum) ? 1 : 0;
-    $activate_api = isset($proxy_activate_api) ? 1 : 0;
-    $proxy_address = "$proxy_hostname:$proxy_port";
-    $proxy_auth = "$proxy_login:$proxy_paswd";
-    Proxy::options($activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth);
+    // параметры прокси
+    $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
+    $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
+    $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
+    $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+
+    // устанавливаем прокси
+    Proxy::options(
+        $activate_forum,
+        $activate_api,
+        $cfg['proxy_type'],
+        $proxy_address,
+        $proxy_auth
+    );
 
     // каталог для сохранения торрент-файлов
     $torrent_files_dir = 'data/tfiles';
@@ -131,9 +139,14 @@ try {
         }
 
         // скачивание торрент-файлов
-        $download = new Download($forum_url, $api_key, $user_id);
+        $download = new Download(
+            $cfg['forum_url'],
+            $cfg['api_key'],
+            $cfg['user_id']
+        );
+
         foreach ($topics_ids as $topic_id) {
-            $data = $download->get_torrent_file($topic_id, $retracker);
+            $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
             if ($data === false) {
                 continue;
             }
@@ -160,7 +173,10 @@ try {
         $count_downloaded = count($torrent_files_downloaded);
 
         // дополнительный слэш в конце каталога
-        if (!empty($forum['fd']) && !in_array(substr($forum['fd'], -1), array('\\', '/'))) {
+        if (
+            !empty($forum['fd'])
+            && !in_array(substr($forum['fd'], -1), array('\\', '/'))
+        ) {
             $forum['fd'] .= strpos($forum['fd'], '/') === false ? '\\' : '/';
         }
 
