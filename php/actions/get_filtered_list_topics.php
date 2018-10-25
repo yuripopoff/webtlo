@@ -205,7 +205,7 @@ try {
         $where = array();
         $left_join = array();
 
-        if (isset($cfg['avg_seeders'])) {
+        if ($cfg['avg_seeders']) {
             // некорректный период средних сидов
             if (!is_numeric($filter['avg_seeders_period'])) {
                 throw new Exception("В фильтре введено некорректное значение для периода средних сидов");
@@ -334,7 +334,7 @@ try {
             }
             // цвет пульки
             $bullet = '';
-            if (isset($cfg['avg_seeders'])) {
+            if (isset($topic_data['ds'])) {
                 if ($topic_data['ds'] < $filter['avg_seeders_period']) {
                     $bullet = $topic_data['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
                 } else {

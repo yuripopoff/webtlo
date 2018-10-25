@@ -360,8 +360,8 @@ function getFilteredTopics() {
 		|| forum_id == -3
 	) {
 		$(".topics_filter input").prop("disabled", false);
-		$("#toolbar-new-torrents button").button("enable");
-		$("#toolbar-control-topics button").button("enable");
+		$("#toolbar-new-torrents").buttonset("enable");
+		$("#toolbar-control-topics").buttonset("enable");
 		$("#filter_avg_seeders_period").spinner("enable");
 		$("#filter_rule").spinner("enable");
 		$("#filter_rule_from").spinner("enable");
@@ -369,11 +369,15 @@ function getFilteredTopics() {
 		$("#filter_date_release").datepicker("enable");
 	} else {
 		if (forum_id == -2) {
-			$("#toolbar-control-topics button").button("disable");
+			$("#toolbar-control-topics").buttonset("disable");
+			$("#tor_blacklist").button("enable");
+		} else {
+			$("#toolbar-control-topics").buttonset("enable");
+			$("#tor_blacklist").button("disable");
 		}
 		$(".topics_filter input").prop("disabled", true);
 		$("#filter-sort-block input").prop("disabled", false);
-		$("#toolbar-new-torrents button").button("disable");
+		$("#toolbar-new-torrents").buttonset("disable");
 		$("#filter_avg_seeders_period").spinner("disable");
 		$("#filter_rule").spinner("disable");
 		$("#filter_rule_from").spinner("disable");

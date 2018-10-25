@@ -52,7 +52,7 @@ $(document).ready(function () {
 			$("#ss-sub-folder :first").prop("selected", "selected");
 		}
 		$("#ss-hide-topics [value=" + data[5] + "]").prop("selected", "selected");
-		var ss_change = $(this).val();
+		ss_change = $(this).val();
 		$("#ss-id").val(ss_change);
 	});
 
