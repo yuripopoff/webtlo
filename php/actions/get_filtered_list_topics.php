@@ -41,7 +41,7 @@ try {
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
     $pattern_topic_data = array(
         'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
-        'ds' => '<i class="fa fa-circle %8$s"></i>',
+        'ds' => ' <i class="fa fa-circle %8$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
         'na' => '<a href="' . $cfg['forum_url'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
         'si' => ' (%5$s)',

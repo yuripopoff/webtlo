@@ -59,7 +59,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.9.7</title>
+		<title>web-TLO-0.9.9.8</title>
 		<script src="jquery/jquery.js"></script>
 		<script src="jquery/jquery-ui.js"></script>
 		<script src="jquery/external/datepicker-ru.js"></script>
@@ -514,7 +514,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Каталог для данных:
 										<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
 									</label>
-									<label class="flex">
+									<label hidden class="flex">
 										Ссылка на список:
 										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>

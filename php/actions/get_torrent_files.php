@@ -107,7 +107,7 @@ try {
         $cfg['user_id']
     );
 
-    foreach ($topics_ids as $topic_id) {
+    foreach ($topics_ids['topics_ids'] as $topic_id) {
         $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
         if ($data === false) {
             continue;
@@ -144,6 +144,7 @@ try {
         }
         $torrent_files_downloaded[] = $topic_id;
     }
+    unset($topics_ids);
 
     $torrent_files_downloaded = count($torrent_files_downloaded);
 
