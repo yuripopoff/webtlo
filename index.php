@@ -124,11 +124,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-download download-replace" aria-hidden="true"></i>
 									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
 								</button>
+							</div>
+							<div id="toolbar-control-topics">
 								<button type="button" id="tor_blacklist" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
 									<i class="fa fa-ban" aria-hidden="true"></i>
 								</button>
-							</div>
-							<div id="toolbar-control-topics">
 								<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
 									<i class="fa fa-tag" aria-hidden="true"></i>
 								</button>
