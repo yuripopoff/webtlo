@@ -73,17 +73,17 @@ $(document).ready(function () {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
 			showResult("Выберите раздачи");
-			return;
+			return false;
 		}
 		var forums = getForums();
 		if ($.isEmptyObject(forums)) {
 			showResult("В настройках не найдены подразделы");
-			return;
+			return false;
 		}
 		var tor_clients = getTorClients();
 		if ($.isEmptyObject(tor_clients)) {
 			showResult("В настройках не найдены торрент-клиенты");
-			return;
+			return false;
 		}
 		$("#process").text("Добавление раздач в торрент-клиент...");
 		var config = $("#config").serialize();
@@ -116,12 +116,12 @@ $(document).ready(function () {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
 			showResult("Выберите раздачи");
-			return;
+			return false;
 		}
 		var tor_clients = getTorClients();
 		if ($.isEmptyObject(tor_clients)) {
 			showResult("В настройках не найдены торрент-клиенты");
-			return;
+			return false;
 		}
 		var action = $(this).val();
 		var subsection = $("#subsections").val();
@@ -228,7 +228,7 @@ $(document).ready(function () {
 		if (!$("#topics .topic").hasClass("first-topic")) {
 			$(this).addClass("first-topic");
 			getCountSizeSelectedTopics();
-			return false;
+			return true;
 		}
 		if (event.shiftKey) {
 			var data = this.dataset;

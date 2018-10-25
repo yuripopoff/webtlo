@@ -7,6 +7,7 @@ $(document).ready(function () {
 			url: "php/actions/update_info.php",
 			beforeSend: function () {
 				block_actions();
+				$("#process").text("Обновление сведений о раздачах...");
 			},
 			success: function (response) {
 				response = $.parseJSON(response);
@@ -27,9 +28,12 @@ $(document).ready(function () {
 			url: "php/actions/send_reports.php",
 			beforeSend: function () {
 				block_actions();
+				$("#process").text("Отправка отчётов на форум...");
 			},
 			success: function (response) {
-				$("#log").append(response);
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#topics_result").text(response.result);
 			},
 			complete: function () {
 				block_actions();

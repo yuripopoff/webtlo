@@ -94,9 +94,11 @@ try {
 
     } elseif ($forum_id == -2) {
 
+        // находим значение за последний день
+        $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
         // чёрный список
         $topics = Db::query_database(
-            "SELECT Topics.id,na,si,rg,se,comment FROM Topics
+            "SELECT Topics.id,na,si,rg,$se,comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
 			WHERE Blacklist.id IS NOT NULL",
             array(),
@@ -127,7 +129,8 @@ try {
                     $topic_data['na'],
                     $topic_data['si'],
                     convert_bytes($topic_data['si']),
-                    date('d.m.Y', $topic_data['rg'])
+                    date('d.m.Y', $topic_data['rg']),
+                    round($topic_data['se'])
                 ),
                 $topic_data['comment']
             );
