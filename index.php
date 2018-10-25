@@ -514,7 +514,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Каталог для данных:
 										<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
 									</label>
-									<label hidden class="flex">
+									<label style="display:none;" class="flex">
 										Ссылка на список:
 										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
