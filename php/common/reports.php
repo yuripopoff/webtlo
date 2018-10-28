@@ -244,8 +244,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]' .
         'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
         'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '[br]' .
-        'Всего хранимых раздач в подразделе: %s шт. / %s[br]' .
-        'Количество хранителей: %s[hr]' .
+        'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]' .
+        'Количество хранителей: %%kpqt%%[hr]' .
         'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
         // значения хранимого для шапки
         $count_keepers = 1;
@@ -269,11 +269,18 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         }
         unset($stored);
         // вставляем общее хранимое в шапку
-        $tmp['header'] = sprintf(
-            $tmp['header'],
-            $sumdlqt_keepers,
-            convert_bytes($sumdlsi_keepers),
-            $count_keepers
+        $tmp['header'] = str_replace(
+            array(
+                '%%dlqt%%',
+                '%%dlsi%%',
+                '%%kpqt%%',
+            ),
+            array(
+                $sumdlqt_keepers,
+                convert_bytes($sumdlsi_keepers),
+                $count_keepers,
+            ),
+            $tmp['header']
         );
         Log::append('Отправка шапки...');
         // отправка сообщения с шапкой
