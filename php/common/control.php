@@ -96,9 +96,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
                 && $peers == $cfg['topics_control']['peers']
                 && $tor_client_status == 1
             ) {
-                $peers = 1;
-            } else {
-                $peers = 0;
+                $peers++;
             }
 
             // стопим только, если есть сиды
