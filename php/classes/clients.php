@@ -88,6 +88,9 @@ class utorrent
     public function getTorrents()
     {
         $data = $this->makeRequest("?list=1");
+        if (empty($data['torrents'])) {
+            return false;
+        }
         foreach ($data['torrents'] as $torrent) {
             $status = decbin($torrent[1]);
             // 0 - Started, 2 - Paused, 3 - Error, 4 - Checked, 7 - Loaded, 100% Downloads
@@ -1020,6 +1023,9 @@ class qbittorrent
     public function getTorrents()
     {
         $data = $this->makeRequest('', 'query/torrents');
+        if (empty($data)) {
+            return false;
+        }
         foreach ($data as $torrent) {
             if ($torrent['state'] != 'error') {
                 if ($torrent['progress'] == 1) {
@@ -1273,11 +1279,13 @@ class ktorrent
             array(CURLOPT_POST => false),
             true
         );
+        if (empty($data['torrent'])) {
+            return false;
+        }
         // вывод отличается, если в клиенте только одна раздача
         if ($full) {
             return $data;
         }
-
         foreach ($data['torrent'] as $torrent) {
             if ($torrent['status'] != 'Ошибка') {
                 if ($torrent['percentage'] == 100) {
@@ -1314,7 +1322,16 @@ class ktorrent
     public function torrentStart($hash, $force = false)
     {
         $torrents = $this->getTorrents(true);
-        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        if ($torrents === false) {
+            return false;
+        }
+        $hashes = array_flip(
+            array_column_common(
+                $torrents['torrent'],
+                'info_hash'
+            )
+        );
+        unset($torrents);
         foreach ($hash as $hash) {
             if (isset($hashes[strtolower($hash)])) {
                 $json = $this->makeRequest('action?start=' . $hashes[strtolower($hash)]);
@@ -1327,7 +1344,16 @@ class ktorrent
     public function torrentStop($hash)
     {
         $torrents = $this->getTorrents(true);
-        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        if ($torrents === false) {
+            return false;
+        }
+        $hashes = array_flip(
+            array_column_common(
+                $torrents['torrent'],
+                'info_hash'
+            )
+        );
+        unset($torrents);
         foreach ($hash as $hash) {
             if (isset($hashes[strtolower($hash)])) {
                 $json = $this->makeRequest('action?stop=' . $hashes[strtolower($hash)]);
@@ -1340,7 +1366,16 @@ class ktorrent
     public function torrentRemove($hash, $data = false)
     {
         $torrents = $this->getTorrents(true);
-        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        if ($torrents === false) {
+            return false;
+        }
+        $hashes = array_flip(
+            array_column_common(
+                $torrents['torrent'],
+                'info_hash'
+            )
+        );
+        unset($torrents);
         foreach ($hash as $hash) {
             if (isset($hashes[strtolower($hash)])) {
                 $json = $this->makeRequest('action?remove=' . $hashes[strtolower($hash)]);
@@ -1417,7 +1452,7 @@ class rtorrent
     // получение списка раздач
     public function getTorrents()
     {
-        $res = $this->makeRequest(
+        $data = $this->makeRequest(
             "d.multicall",
             array(
                 "main",
@@ -1426,8 +1461,11 @@ class rtorrent
                 "d.get_complete=",
             )
         );
+        if (empty($data)) {
+            return false;
+        }
         // ответ в формате array(HASH, STATE active/stopped, COMPLETED)
-        foreach ($res as $torrent) {
+        foreach ($data as $torrent) {
             // $status:
             //        0 - Не скачано
             //        1 - Скачано и активно
