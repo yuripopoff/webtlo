@@ -74,7 +74,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topics = Db::query_database(
         "SELECT Topics.id,ss,na,si,st FROM Topics
 		LEFT JOIN Clients ON Topics.hs = Clients.hs
-		WHERE ss = ? AND dl = 1",
+		WHERE ss = ? AND dl IN (1,-1)",
         array($forum_id),
         true
     );
