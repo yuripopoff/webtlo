@@ -82,8 +82,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 			</ul>
 			<div id="content">
 				<div id="main" class="content">
-					<select id="subsections">
-						<optgroup id="subsections_stored">
+					<select id="main-subsections">
+						<optgroup id="main-subsections-stored">
 							<?php echo $subsections ?>
 						</optgroup>
 						<optgroup label="Прочее">
@@ -601,8 +601,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</form>
 				</div>
 				<div id="reports" class="content">
-					<select id="reports_list">
-						<optgroup id="reports_list_stored">
+					<select id="reports-subsections">
+						<optgroup id="reports-subsections-stored">
 							<option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
 							<?php echo $subsections ?>
 						</optgroup>
@@ -611,7 +611,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</optgroup>
 					</select>
 					<hr />
-					<div id="report_content"></div>
+					<div id="reports-content"></div>
 				</div>
 				<div id="statistics" class="content">
 					<div>

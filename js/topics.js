@@ -10,7 +10,7 @@ $(document).ready(function () {
 			showResult("Выберите раздачи");
 			return false;
 		}
-		var forum_id = $("#subsections").val();
+		var forum_id = $("#main-subsections").val();
 		var replace_passkey = $(this).val();
 		var config = $("#config").serialize();
 		$("#process").text("Скачивание торрент-файлов...");
@@ -45,7 +45,7 @@ $(document).ready(function () {
 			showResult("Выберите раздачи");
 			return false;
 		}
-		var forum_id = $("#subsections").val();
+		var forum_id = $("#main-subsections").val();
 		var value = forum_id != -2 ? 1 : 0;
 		$("#process").text('Редактирование "чёрного списка" раздач...');
 		$.ajax({
@@ -124,7 +124,7 @@ $(document).ready(function () {
 			return false;
 		}
 		var action = $(this).val();
-		var subsection = $("#subsections").val();
+		var subsection = $("#main-subsections").val();
 		var label = "";
 		var remove_data = "";
 		var force_start = "";
@@ -353,7 +353,7 @@ var filter_delay = makeDelay(500);
 
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
-	var forum_id = $("#subsections").val();
+	var forum_id = $("#main-subsections").val();
 	// блокировка фильтра
 	if (
 		forum_id > 0

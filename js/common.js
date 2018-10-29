@@ -28,20 +28,20 @@ var lock_actions = 0;
 function block_actions() {
 	if (lock_actions == 0) {
 		$("#topics_control button").prop("disabled", true);
-		$("#subsections").selectmenu("disable");
+		$("#main-subsections").selectmenu("disable");
 		$("#loading, #process").show();
 		lock_actions = 1;
 	} else {
 		$("#topics_control button").prop("disabled", false);
 		if (
-			$("#subsections").val() < 1
+			$("#main-subsections").val() < 1
 			|| !$("input[name=filter_status]").eq(1).prop("checked")
 		) {
 			$(".tor_add").prop("disabled", true);
 		} else {
 			$(".tor_stop, .tor_remove, .tor_label, .tor_start").prop("disabled", true);
 		}
-		$("#subsections").selectmenu("enable");
+		$("#main-subsections").selectmenu("enable");
 		$("#loading, #process").hide();
 		lock_actions = 0;
 	}
@@ -85,22 +85,22 @@ function getReport(event, ui) {
 		url: "php/actions/get_reports.php",
 		data: { forum_id: forum_id },
 		beforeSend: function () {
-			$("#reports_list").selectmenu("disable");
-			$("#report_content").html("<i class=\"fa fa-spinner fa-pulse\"></i>");
+			$("#reports-subsections").selectmenu("disable");
+			$("#reports-content").html("<i class=\"fa fa-spinner fa-pulse\"></i>");
 		},
 		success: function (response) {
 			response = $.parseJSON(response);
 			$("#log").append(response.log);
-			$("#report_content").html(response.report);
+			$("#reports-content").html(response.report);
 			//инициализация "аккордиона" сообщений
-			$("#report_content .report_message").each(function () {
+			$("#reports-content .report_message").each(function () {
 				$(this).accordion({
 					collapsible: true,
 					heightStyle: "content"
 				});
 			});
 			// выделение тела сообщения двойным кликом
-			$("#report_content .ui-accordion-content").dblclick(function () {
+			$("#reports-content .ui-accordion-content").dblclick(function () {
 				var e = this;
 				if (window.getSelection) {
 					var s = window.getSelection();
@@ -126,7 +126,7 @@ function getReport(event, ui) {
 			});
 		},
 		complete: function () {
-			$("#reports_list").selectmenu("enable");
+			$("#reports-subsections").selectmenu("enable");
 		},
 	});
 }

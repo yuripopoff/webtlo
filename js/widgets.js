@@ -75,25 +75,22 @@ $(document).ready(function () {
     });
 
     // выпадающее меню для отчётов
-    $("#reports_list").selectmenu({
+    $("#reports-subsections").selectmenu({
         width: "calc(100% - 36px)",
-        change: getReport,
-        open: function (event, ui) {
-            height = $("#reports_list-menu").height() >= 399 ? 400 : 'auto';
-            $("#reports_list-menu").css("height", height);
-            active = $("#reports_list-button").attr("aria-activedescendant");
-            $("#reports_list-menu").closest("ul")
-                .find("div[role=option]")
-                .each(function () {
-                    $(this).css({
-                        "font-weight": "normal"
-                    });
-                });
+        change: function (event, ui) {
+            getReport(event, ui);
+            // выделяем жирным в списке
+            var active = $("#reports-subsections-button").attr("aria-activedescendant");
+            $("#reports-subsections-menu div[role=option]").css({
+                "font-weight": "normal"
+            });
             $("#" + active).css({
                 "font-weight": "bold"
             });
         },
-    });
+    })
+        .selectmenu("menuWidget")
+        .addClass("menu-overflow");
 
     // инициализация диалога для установки произвольной метки
     $("#dialog").dialog({

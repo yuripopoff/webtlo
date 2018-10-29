@@ -7,30 +7,32 @@ $(document).ready(function () {
 	var ss_change;
 
 	// загрузка данных о выбранном подразделе на главной
-	$("#subsections").selectmenu({
+	$("#main-subsections").selectmenu({
 		width: "calc(100% - 36px)",
 		change: function (event, ui) {
 			getFilteredTopics();
 			Cookies.set('saved_forum_id', ui.item.value);
 		},
 		create: function (event, ui) {
-			if (typeof (Cookies.get('saved_forum_id')) !== "undefined") {
-				$("#subsections").val(parseInt(Cookies.get('saved_forum_id')));
-				$("#subsections").selectmenu("refresh");
+			var forum_id = Cookies.get('saved_forum_id');
+			if (typeof forum_id !== "undefined") {
+				$("#main-subsections").val(forum_id);
+				$("#main-subsections").selectmenu("refresh");
 			}
 		},
 		open: function (event, ui) {
-			var height = $("#subsections-menu").height() >= 399 ? 400 : 'auto';
-			$("#subsections-menu").css("height", height);
-			var active = $("#subsections-button").attr("aria-activedescendant");
-			$("#subsections-menu").closest("ul")
-				.find("div[role=option]")
-				.each(function () {
-					$(this).css({ "font-weight": "normal" });
-				});
-			$("#" + active).css({ "font-weight": "bold" });
+			// выделяем жирным в списке
+			var active = $("#main-subsections-button").attr("aria-activedescendant");
+			$("#main-subsections-menu div[role=option]").css({
+				"font-weight": "normal"
+			});
+			$("#" + active).css({
+				"font-weight": "bold"
+			});
 		},
-	});
+	})
+		.selectmenu("menuWidget")
+		.addClass("menu-overflow");;
 
 	// получение свойств выбранного подраздела
 	$("#list-ss").on("change", function () {
@@ -83,8 +85,8 @@ $(document).ready(function () {
 		if (forum_id) {
 			var i = $("#list-ss :selected").index();
 			$("#list-ss :selected").remove();
-			$("#subsections_stored [value=" + forum_id + "]").remove();
-			$("#reports_list_stored [value=" + forum_id + "]").remove();
+			$("#main-subsections-stored [value=" + forum_id + "]").remove();
+			$("#reports-subsections-stored [value=" + forum_id + "]").remove();
 			var q = $("select[id=list-ss] option").size();
 			if (q == 0) {
 				$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
@@ -93,8 +95,8 @@ $(document).ready(function () {
 				q == i ? i : i++;
 				$("#list-ss :nth-child(" + i + ")").prop("selected", "selected").change();
 			}
-			$("#subsections").selectmenu("refresh");
-			$("#reports_list").selectmenu("refresh");
+			$("#main-subsections").selectmenu("refresh");
+			$("#reports-subsections").selectmenu("refresh");
 			getFilteredTopics();
 		}
 	});
@@ -125,18 +127,18 @@ function addSubsection(event, ui) {
 	});
 	if (q != 1) {
 		$("#list-ss").append('<option value="' + vl + '" data="0|' + label + '||||0">' + lb + '</option>');
-		$("#subsections_stored").append('<option value="' + vl + '">' + lb + '</option>');
-		$("#reports_list_stored").append('<option value="' + vl + '">' + lb + '</option>');
+		$("#main-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
+		$("#reports-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
 		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
 		$("#ss-id").prop("disabled", true);
 	}
 	$("#list-ss option[value=" + vl + "]").prop("selected", "selected").change();
 	ui.item.value = '';
 	doSortSelect("list-ss");
-	doSortSelect("subsections_stored");
-	doSortSelect("reports_list_stored");
-	$("#subsections").selectmenu("refresh");
-	$("#reports_list").selectmenu("refresh");
+	doSortSelect("main-subsections-stored");
+	doSortSelect("reports-subsections-stored");
+	$("#main-subsections").selectmenu("refresh");
+	$("#reports-subsections").selectmenu("refresh");
 }
 
 function getForums() {

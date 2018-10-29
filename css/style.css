@@ -7,6 +7,7 @@
 /* @import url("./reset.css"); */
 
 /* general */
+
 html, body {
 	width: calc(100% - 10px);
 	height: calc(100% - 10px);
@@ -46,7 +47,7 @@ h2 {
 h3 {
 	margin: 15px 0 10px 0;
 	font-weight: bold;
-}	
+}
 
 hr {
 	clear: both;
@@ -59,14 +60,14 @@ input[type="text"] {
 }
 
 sup, sub {
-    vertical-align: baseline;
-    position: relative;
-    font-size: .7em;
-    line-height: 1;
+	vertical-align: baseline;
+	position: relative;
+	font-size: .7em;
+	line-height: 1;
 }
 
 sup {
-    bottom: 1.4ex;
+	bottom: 1.4ex;
 }
 
 sub {
@@ -74,6 +75,7 @@ sub {
 }
 
 /* fix widgets ui */
+
 ul.menu.ui-tabs-nav {
 	background: #fff;
 	border: 0;
@@ -134,7 +136,15 @@ li.menu.ui-tabs-active {
 	background: none;
 }
 
+/* selectmenu context menu height */
+
+.menu-overflow {
+	height: auto;
+	max-height: 400px;
+}
+
 /* menu */
+
 #menutabs {
 	margin: 0;
 	padding: 0;
@@ -144,13 +154,14 @@ li.menu.ui-tabs-active {
 #content {
 	border: 1px solid #d3d3d3;
 	border-radius: 4px;
-	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 	margin: 0;
 	padding: 10px;
 	height: calc(100% - 56px);
 }
 
 /* main */
+
 #main {
 	margin: 0;
 	padding: 0;
@@ -160,11 +171,11 @@ li.menu.ui-tabs-active {
 	height: calc(100% - 2px);
 }
 
-#subsections-button {
+#main-subsections-button {
 	margin-bottom: 10px;
 }
 
-#subsections-button *, #subsections-menu * {
+#main-subsections-button *, #main-subsections-menu * {
 	font-size: small;
 }
 
@@ -182,6 +193,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics control */
+
 #topics_control {
 	padding: 10px 10px 5px 10px;
 }
@@ -196,6 +208,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics filter */
+
 .filter_block {
 	display: inline-block;
 	vertical-align: top;
@@ -228,6 +241,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics result */
+
 .status_info {
 	display: flex;
 }
@@ -263,6 +277,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics */
+
 #topics {
 	margin: 0;
 	padding: 0 10px;
@@ -276,6 +291,7 @@ li.menu.ui-tabs-active {
 }
 
 /* color icons status */
+
 .text-success {
 	color: #28a745;
 }
@@ -289,6 +305,7 @@ li.menu.ui-tabs-active {
 }
 
 /* settings */
+
 #settings {
 	margin: 0;
 	padding: 0;
@@ -332,7 +349,7 @@ li.menu.ui-tabs-active {
 
 .block-settings span {
 	display: inline-block;
-	margin: 10px 15px 0 0;	
+	margin: 10px 15px 0 0;
 }
 
 #settings label {
@@ -439,6 +456,7 @@ li.menu.ui-tabs-active {
 }
 
 /* reports */
+
 #reports {
 	margin: 0;
 	padding: 0;
@@ -449,7 +467,7 @@ li.menu.ui-tabs-active {
 	font-size: small;
 }
 
-#report_content {
+#reports-content {
 	margin: 0;
 	padding: 5px 10px 0 10px;
 	/* padding: 0; */
@@ -457,15 +475,16 @@ li.menu.ui-tabs-active {
 	overflow-y: auto;
 }
 
-#reports_list-button {
+#reports-subsections-button {
 	margin-bottom: 5px;
 }
 
-#reports_list-menu * {
+#reports-subsections-menu * {
 	font-size: small;
 }
 
 /* statistics */
+
 #statistics {
 	margin: 0;
 	padding: 0;
@@ -516,6 +535,7 @@ li.menu.ui-tabs-active {
 }
 
 /* journal */
+
 #journal {
 	margin: 0;
 	padding: 0;
@@ -555,6 +575,7 @@ li.menu.ui-tabs-active {
 }
 
 /* manual */
+
 #manual {
 	margin: 0;
 	padding: 0;
