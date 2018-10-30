@@ -250,7 +250,7 @@ class Reports
         $keepers = array();
         $i = 0;
         $page = 1;
-        $index = 0;
+        $index = -1;
         while ($page > 0) {
             $data = $this->make_request(
                 $this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i"
@@ -274,6 +274,7 @@ class Reports
                     if (empty($post_id)) {
                         continue;
                     }
+                    $index++;
                     $nickname = $row->find('p.nick > a')->text();
                     $keepers[$index] = array(
                         'post_id' => $post_id,
@@ -304,15 +305,19 @@ class Reports
                     if (!empty($topics)) {
                         foreach ($topics as $topic) {
                             $topic = pq($topic);
-                            if (preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))) {
-                                $topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-                                $keepers[$index]['topics_ids'][] = $topic_id;
+                            $href = $topic->attr('href');
+                            if (preg_match('/viewtopic.php\?t=[0-9]+$/', $href)) {
+                                $keepers[$index]['topics_ids'][] = preg_replace(
+                                    '/.*?([0-9]*)$/',
+                                    '$1',
+                                    $href
+                                );
                             }
                         }
                     }
                     unset($topics);
-                    $index++;
                 }
+                unset($topic_main);
             }
             $page--;
             $i += 30;
