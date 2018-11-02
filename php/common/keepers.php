@@ -73,9 +73,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                     "INSERT INTO temp.KeepersNew (id,nick,posted) $select",
                     $keepers_topics_ids
                 );
+                unset($keepers_topics_ids);
                 unset($select);
             }
-            unset($keepers_topics_ids);
         }
         unset($keepers);
         unset($keeper);
@@ -98,8 +98,8 @@ if ($count_keepers[0] > 0) {
 
     Db::query_database(
         "DELETE FROM Keepers WHERE id NOT IN (
-            SELECT Keepers.id FROM temp.KeepersNew LEFT JOIN Keepers
-            ON temp.KeepersNew.id  = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
+            SELECT Keepers.id FROM temp.KeepersNew
+            LEFT JOIN Keepers ON temp.KeepersNew.id = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
             WHERE Keepers.id IS NOT NULL
         )"
     );

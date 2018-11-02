@@ -126,6 +126,8 @@ function addSubsection(event, ui) {
 		}
 	});
 	if (q != 1) {
+		var main_selected = $("#main-subsections").val();
+		var reports_selected = $("#reports-subsections").val();
 		$("#list-ss").append('<option value="' + vl + '" data="0|' + label + '||||0">' + lb + '</option>');
 		$("#main-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
 		$("#reports-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
@@ -137,8 +139,8 @@ function addSubsection(event, ui) {
 	doSortSelect("list-ss");
 	doSortSelect("main-subsections-stored");
 	doSortSelect("reports-subsections-stored");
-	$("#main-subsections").selectmenu("refresh");
-	$("#reports-subsections").selectmenu("refresh");
+	$("#main-subsections").val(main_selected).selectmenu("refresh");
+	$("#reports-subsections").val(reports_selected).selectmenu("refresh");
 }
 
 function getForums() {

@@ -330,14 +330,19 @@ $(document).ready(function () {
 		filter_options = $.parseJSON(filter_options);
 		$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
 		$.each(filter_options, function (i, option) {
+			// пропускаем дату регистрации до
+			if (option.name == 'filter_date_release') {
+				return true;
+			}
 			$("#topics_filter input[name='" + option.name + "']").each(function () {
-				if ($(this).val() === option.value) {
-					if (
-						$(this).attr("type") === "checkbox"
-						|| $(this).attr("type") === "radio"
-					) {
+				if (
+					$(this).attr("type") == "checkbox"
+					|| $(this).attr("type") == "radio"
+				) {
+					if ($(this).val() == option.value) {
 						$(this).prop("checked", true).change();
 					}
+				} else if (this.name == option.name) {
 					$(this).val(option.value);
 				}
 			});

@@ -31,13 +31,20 @@ if (isset($cfg['clients'])) {
 
 // подразделы
 $subsections = '';
+$subsections_settings = '';
 if (isset($cfg['subsections'])) {
     $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
     foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
-        $subsections .= sprintf(
+        $subsections_settings .= sprintf(
             $forum_option_pattern,
             $forum_id,
             implode('|', $forum_info),
+            $forum_info['na']
+        );
+        $subsections .= sprintf(
+            $forum_option_pattern,
+            $forum_id,
+            '',
             $forum_info['na']
         );
     }
@@ -491,7 +498,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<label class="flex">
 									Подраздел:
 									<select name="list-ss" id="list-ss">
-										<?php echo $subsections ?>
+										<?php echo $subsections_settings ?>
 									</select>
 								</label>
 								<fieldset id="ss-prop">
@@ -602,8 +609,10 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				</div>
 				<div id="reports" class="content">
 					<select id="reports-subsections">
-						<optgroup id="reports-subsections-stored">
+						<optgroup>
 							<option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
+						</optgroup>
+						<optgroup id="reports-subsections-stored">
 							<?php echo $subsections ?>
 						</optgroup>
 						<optgroup>
