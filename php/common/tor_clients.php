@@ -184,9 +184,9 @@ if (!empty($cfg['clients'])) {
 
     Db::query_database(
         "DELETE FROM TopicsUntracked
-		WHERE id NOT IN (
-			SELECT id FROM temp.TopicsUntrackedNew
-		)"
+        WHERE id NOT IN (
+            SELECT id FROM temp.TopicsUntrackedNew
+        )"
     );
 
 }
