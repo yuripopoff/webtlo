@@ -15,10 +15,15 @@ if (!empty($cfg['clients'])) {
 
     Log::append("Количество торрент-клиентов: " . count($cfg['clients']));
 
-    // создаём временную таблицу
+    // создаём временные таблицы
     Db::query_database(
         "CREATE TEMP TABLE ClientsNew AS
         SELECT hs,cl,dl FROM Clients WHERE 0 = 1"
+    );
+
+    Db::query_database(
+        "CREATE TEMP TABLE TopicsUntrackedNew AS
+        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1"
     );
 
     foreach ($cfg['clients'] as $client_id => $client_info) {
@@ -94,11 +99,19 @@ if (!empty($cfg['clients'])) {
         )"
     );
 
+    if (isset($cfg['subsections'])) {
+        $forums_ids = array_keys($cfg['subsections']);
+        $in = str_repeat('?,', count($forums_ids) - 1) . '?';
+    } else {
+        $forums_ids = array();
+        $in = '';
+    }
+
     $untracked_hashes = Db::query_database(
         "SELECT Clients.hs FROM Clients
         LEFT JOIN Topics ON Topics.hs = Clients.hs
-        WHERE Topics.id IS NULL AND Clients.dl IN (1,-1)",
-        array(),
+        WHERE ss NOT IN ($in) AND Clients.dl IN (1,-1)",
+        $forums_ids,
         true,
         PDO::FETCH_COLUMN
     );
@@ -141,12 +154,6 @@ if (!empty($cfg['clients'])) {
             }
             unset($untracked_data);
 
-            // создаём временную таблицу
-            Db::query_database(
-                "CREATE TEMP TABLE TopicsUntrackedNew AS
-                SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1"
-            );
-
             $untracked_set = array_chunk($untracked_set, 500);
 
             foreach ($untracked_set as $untracked_set) {
@@ -174,5 +181,12 @@ if (!empty($cfg['clients'])) {
         }
 
     }
+
+    Db::query_database(
+        "DELETE FROM TopicsUntracked
+		WHERE id NOT IN (
+			SELECT id FROM temp.TopicsUntrackedNew
+		)"
+    );
 
 }
