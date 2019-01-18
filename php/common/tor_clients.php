@@ -9,22 +9,22 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
+// создаём временные таблицы
+Db::query_database(
+    "CREATE TEMP TABLE ClientsNew AS
+        SELECT hs,cl,dl FROM Clients WHERE 0 = 1"
+);
+
+Db::query_database(
+    "CREATE TEMP TABLE TopicsUntrackedNew AS
+        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1"
+);
+
 if (!empty($cfg['clients'])) {
 
     Log::append("Сканирование торрент-клиентов...");
 
     Log::append("Количество торрент-клиентов: " . count($cfg['clients']));
-
-    // создаём временные таблицы
-    Db::query_database(
-        "CREATE TEMP TABLE ClientsNew AS
-        SELECT hs,cl,dl FROM Clients WHERE 0 = 1"
-    );
-
-    Db::query_database(
-        "CREATE TEMP TABLE TopicsUntrackedNew AS
-        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1"
-    );
 
     foreach ($cfg['clients'] as $client_id => $client_info) {
 
@@ -90,14 +90,6 @@ if (!empty($cfg['clients'])) {
         );
 
     }
-
-    Db::query_database(
-        "DELETE FROM Clients WHERE hs NOT IN (
-            SELECT Clients.hs FROM temp.ClientsNew LEFT JOIN Clients
-            ON temp.ClientsNew.hs  = Clients.hs AND temp.ClientsNew.cl = Clients.cl
-            WHERE Clients.hs IS NOT NULL
-        )"
-    );
 
     if (isset($cfg['subsections'])) {
         $forums_ids = array_keys($cfg['subsections']);
@@ -190,3 +182,11 @@ if (!empty($cfg['clients'])) {
     );
 
 }
+
+Db::query_database(
+    "DELETE FROM Clients WHERE hs NOT IN (
+        SELECT Clients.hs FROM temp.ClientsNew LEFT JOIN Clients
+        ON temp.ClientsNew.hs = Clients.hs AND temp.ClientsNew.cl = Clients.cl
+        WHERE Clients.hs IS NOT NULL
+    )"
+);
